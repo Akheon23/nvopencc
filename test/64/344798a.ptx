@@ -1,0 +1,170 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia3264_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling 344798a.i (/tmp/ccBI#.U254T6)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:64
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"344798a.i"
+
+	.extern	.shared .align 1 .b8 raw_block_memory[];
+	.global .u64 source0;
+	.global .u64 allocation0;
+
+	.entry run_cartesian_product_Crosser_global
+	{
+	.reg .u16 %rh<22>;
+	.reg .u32 %r<20>;
+	.reg .u64 %rd<19>;
+	.reg .f32 %f<5>;
+	.reg .pred %p<6>;
+	.local .align 8 .b8 __cuda_output0[528];
+	.local .align 8 .b8 __cuda_slot_info_a528[560];
+	.local .align 8 .b8 __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_output_matrix1088[528];
+	.local .align 8 .b8 __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_slot_info_a1616[560];
+	.local .align 4 .b8 __cuda_temp2176[128];
+	.loc	1	73	0
+$LBB1_run_cartesian_product_Crosser_global:
+	.loc	1	76	0
+	mov.s32 	%r1, 12;             	// 
+	st.local.s32 	[__cuda_output0+516], %r1;	// id:117 __cuda_output0+0x204
+	.loc	1	77	0
+	ld.global.u64 	%rd1, [allocation0];	// id:118 allocation0+0x0
+	st.local.u64 	[__cuda_output0+520], %rd1;	// id:119 __cuda_output0+0x208
+	.loc	1	78	0
+	ld.global.u64 	%rd2, [source0];	// id:120 source0+0x0
+	st.local.u64 	[__cuda_slot_info_a528+528], %rd2;	// id:121 __cuda_slot_info_a528+0x210
+	.loc	1	79	0
+	mov.s32 	%r2, 12;             	// 
+	st.local.s32 	[__cuda_slot_info_a528+540], %r2;	// id:122 __cuda_slot_info_a528+0x21c
+	.loc	1	80	0
+	mov.s32 	%r3, 12;             	// 
+	st.local.s32 	[__cuda_slot_info_a528+552], %r3;	// id:123 __cuda_slot_info_a528+0x228
+	.loc	1	81	0
+	mov.u64 	%rd3, raw_block_memory;	// 
+	st.local.u64 	[__cuda_slot_info_a528+528], %rd3;	// id:121 __cuda_slot_info_a528+0x210
+	.loc	1	82	0
+	mov.u64 	%rd4, __cuda_output0;	// 
+	mov.u64 	%rd5, __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_output_matrix1088;	// 
+	mov.s32 	%r4, 0;              	// 
+	mov.s16 	%rh1, 132;           	// 
+$L_0_10:
+ //<loop> Loop body line 82, nesting depth: 1, iterations: 132
+	cvt.u64.s32 	%rd6, %r4;       	// 
+	add.u64 	%rd7, %rd6, %rd4;    	// 
+	ld.local.u32 	%r5, [%rd7+0];  	// id:167 __cuda_output0+0x0
+	cvt.u64.s32 	%rd8, %r4;       	// 
+	add.u64 	%rd9, %rd8, %rd5;    	// 
+	st.local.u32 	[%rd9+0], %r5;  	// id:166 __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_output_matrix1088+0x0
+	add.s32 	%r4, %r4, 4;         	// 
+	sub.s16 	%rh1, %rh1, 1;       	// 
+	mov.s16 	%rh2, 0;             	// 
+	setp.gt.s16 	%p1, %rh1, %rh2; 	// 
+	@%p1 bra 	$L_0_10;            	// 
+	mov.u64 	%rd10, __cuda_slot_info_a528;	// 
+	mov.u64 	%rd11, __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_slot_info_a1616;	// 
+	mov.s32 	%r6, 0;              	// 
+	mov.s16 	%rh3, 140;           	// 
+$L_0_11:
+ //<loop> Loop body line 82, nesting depth: 1, iterations: 140
+	cvt.u64.s32 	%rd12, %r6;      	// 
+	add.u64 	%rd13, %rd12, %rd10; 	// 
+	ld.local.u32 	%r7, [%rd13+0]; 	// id:169 __cuda_slot_info_a528+0x0
+	cvt.u64.s32 	%rd14, %r6;      	// 
+	add.u64 	%rd15, %rd14, %rd11; 	// 
+	st.local.u32 	[%rd15+0], %r7; 	// id:168 __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_slot_info_a1616+0x0
+	add.s32 	%r6, %r6, 4;         	// 
+	sub.s16 	%rh3, %rh3, 1;       	// 
+	mov.s16 	%rh4, 0;             	// 
+	setp.gt.s16 	%p2, %rh3, %rh4; 	// 
+	@%p2 bra 	$L_0_11;            	// 
+	.loc	1	32	0
+	ld.local.u64 	%rd16, [__cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_slot_info_a1616+528];	// id:116 __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_slot_info_a1616+0x210
+	ld.global.f32 	%f1, [%rd16+0];	// id:128
+	st.local.f32 	[__cuda_temp2176+0], %f1;	// id:129 __cuda_temp2176
+	.loc	1	33	0
+	ld.global.f32 	%f2, [%rd16+4];	// id:130
+	st.local.f32 	[__cuda_temp2176+4], %f2;	// id:131 __cuda_temp2176
+	.loc	1	34	0
+	ld.global.f32 	%f3, [%rd16+8];	// id:132
+	st.local.f32 	[__cuda_temp2176+8], %f3;	// id:133 __cuda_temp2176
+	.loc	1	46	0
+	ld.local.s32 	%r8, [__cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_output_matrix1088+516];	// id:115 __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_output_matrix1088+0x204
+	mov.s32 	%r9, %r8;            	// 
+	mov.s32 	%r10, 16;            	// 
+	setp.le.s32 	%p3, %r8, %r10;  	// 
+	@%p3 bra 	$Lt_0_5;            	// 
+	sub.s32 	%r11, %r8, 1;        	// 
+	shr.s32 	%r12, %r11, 31;      	// 
+	mov.s32 	%r13, 15;            	// 
+	and.b32 	%r14, %r12, %r13;    	// 
+	add.s32 	%r15, %r14, %r11;    	// 
+	shr.s32 	%r16, %r15, 4;       	// 
+	ld.local.u64 	%rd17, [__cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_output_matrix1088+520];	// id:114 __cuda___cudaparm__Z35all_pairs_for_current_slots_Crosser16barracuda_matrix11slot_info_tiS0_i_output_matrix1088+0x208
+	mov.s32 	%r17, %r16;          	// 
+$Lt_0_7:
+ //<loop> Loop body line 46, nesting depth: 1, estimated iterations: unknown
+	.loc	1	52	0
+	ld.local.u8 	%rh5, [__cuda_temp2176+0];	// id:134 __cuda_temp2176
+	st.global.u8 	[%rd17+0], %rh5;	// id:135
+	ld.local.u8 	%rh6, [__cuda_temp2176+1];	// id:136 __cuda_temp2176
+	st.global.u8 	[%rd17+1], %rh6;	// id:137
+	ld.local.u8 	%rh7, [__cuda_temp2176+2];	// id:138 __cuda_temp2176
+	st.global.u8 	[%rd17+2], %rh7;	// id:139
+	ld.local.u8 	%rh8, [__cuda_temp2176+3];	// id:140 __cuda_temp2176
+	st.global.u8 	[%rd17+3], %rh8;	// id:141
+	ld.local.u8 	%rh9, [__cuda_temp2176+4];	// id:142 __cuda_temp2176
+	st.global.u8 	[%rd17+4], %rh9;	// id:143
+	ld.local.u8 	%rh10, [__cuda_temp2176+5];	// id:144 __cuda_temp2176
+	st.global.u8 	[%rd17+5], %rh10;	// id:145
+	ld.local.u8 	%rh11, [__cuda_temp2176+6];	// id:146 __cuda_temp2176
+	st.global.u8 	[%rd17+6], %rh11;	// id:147
+	ld.local.u8 	%rh12, [__cuda_temp2176+7];	// id:148 __cuda_temp2176
+	st.global.u8 	[%rd17+7], %rh12;	// id:149
+	ld.local.u8 	%rh13, [__cuda_temp2176+8];	// id:150 __cuda_temp2176
+	st.global.u8 	[%rd17+8], %rh13;	// id:151
+	ld.local.u8 	%rh14, [__cuda_temp2176+9];	// id:152 __cuda_temp2176
+	st.global.u8 	[%rd17+9], %rh14;	// id:153
+	ld.local.u8 	%rh15, [__cuda_temp2176+10];	// id:154 __cuda_temp2176
+	st.global.u8 	[%rd17+10], %rh15;	// id:155
+	ld.local.u8 	%rh16, [__cuda_temp2176+11];	// id:156 __cuda_temp2176
+	st.global.u8 	[%rd17+11], %rh16;	// id:157
+	ld.local.u8 	%rh17, [__cuda_temp2176+12];	// id:158 __cuda_temp2176
+	st.global.u8 	[%rd17+12], %rh17;	// id:159
+	ld.local.u8 	%rh18, [__cuda_temp2176+13];	// id:160 __cuda_temp2176
+	st.global.u8 	[%rd17+13], %rh18;	// id:161
+	ld.local.u8 	%rh19, [__cuda_temp2176+14];	// id:162 __cuda_temp2176
+	st.global.u8 	[%rd17+14], %rh19;	// id:163
+	ld.local.u8 	%rh20, [__cuda_temp2176+15];	// id:164 __cuda_temp2176
+	st.global.u8 	[%rd17+15], %rh20;	// id:165
+	sub.s32 	%r9, %r9, 16;        	// 
+	mov.s32 	%r18, 16;            	// 
+	setp.gt.s32 	%p4, %r9, %r18;  	// 
+	@%p4 bra 	$Lt_0_7;            	// 
+$Lt_0_5:
+	.loc	1	83	0
+	exit;                         	// 
+$LDWend_run_cartesian_product_Crosser_global:
+	} // run_cartesian_product_Crosser_global
+

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-16" standalone="no"?>
+<Extensibility xmlns="http://schemas.microsoft.com/AutomationExtensibility">
+	<HostApplication>
+		<Name>Microsoft Visual Studio Macros</Name>
+		<Version>8.0</Version>
+	</HostApplication>
+	<HostApplication>
+		<Name>Microsoft Visual Studio</Name>
+		<Version>8.0</Version>
+	</HostApplication>
+	<Addin>
+		<FriendlyName>Command-Line Debug Add-In</FriendlyName>
+		<Description>Set up a debug session (inclusive of solution) from the command line</Description>
+		<Assembly>CmdLine.dll</Assembly>
+		<FullClassName>CmdLine.Debug</FullClassName>
+		<LoadBehavior>0</LoadBehavior>
+		<CommandPreload>1</CommandPreload>
+		<CommandLineSafe>0</CommandLineSafe>
+	</Addin>
+</Extensibility>

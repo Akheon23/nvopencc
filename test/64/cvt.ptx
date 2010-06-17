@@ -1,0 +1,69 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia3264_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling cvt.i (/tmp/ccBI#.QbyrYY)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:64
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"cvt.i"
+
+	.global .u64 out;
+
+	.entry test
+	{
+	.reg .u32 %r<9>;
+	.reg .u64 %rd<4>;
+	.reg .pred %p<4>;
+	.param .u32 __cudaparm_test_tx;
+	.loc	1	5	0
+$LBB1_test:
+	ld.param.u32 	%r1, [__cudaparm_test_tx];	// id:20 __cudaparm_test_tx+0x0
+	and.b32 	%r2, %r1, 63;        	// 
+	mov.s32 	%r3, 1;              	// 
+	setp.lt.u32 	%p1, %r2, %r3;   	// 
+	mov.u64 	%rd1, 1;             	// 
+	@%p1 bra 	$Lt_0_9;            	// 
+	mov.s32 	%r4, %r2;            	// 
+	mov.u64 	%rd2, 1;             	// 
+	add.u32 	%r5, %r2, 1;         	// 
+	mov.u32 	%r6, 1;              	// 
+	mov.s32 	%r7, %r4;            	// 
+$Lt_0_7:
+ //<loop> Loop body line 5, nesting depth: 1, estimated iterations: unknown
+	.loc	1	12	0
+	mul.lo.u64 	%rd1, %rd2, %rd1; 	// 
+	add.u32 	%r6, %r6, 1;         	// 
+	add.u64 	%rd2, %rd2, 1;       	// 
+	setp.ne.u32 	%p2, %r5, %r6;   	// 
+	@%p2 bra 	$Lt_0_7;            	// 
+	bra.uni 	$Lt_0_5;             	// 
+$Lt_0_9:
+$Lt_0_5:
+	.loc	1	15	0
+	st.global.u64 	[out], %rd1;   	// id:21 out+0x0
+	.loc	1	16	0
+	exit;                         	// 
+$LDWend_test:
+	} // test
+

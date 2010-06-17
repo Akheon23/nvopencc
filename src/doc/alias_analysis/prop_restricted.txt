@@ -1,0 +1,150 @@
+
+   History of the document:
+       - Modified on Feb. 12, 2009 by Xiangyun Kong for updating the alogorithm
+         to use ST->pad as group ID, and set group ID during inlining.         
+
+       - Modified on Fed. 10, 2009 by Xiangyun Kong for modifying the alias rules
+         which are really implemented in Open64.
+
+       - Modified on Feb. 4, 2009 by Xiangyun Kong for adding clarifications about
+            placing restrictions on copy propagation of restricted pointers.
+
+       - Created on Feb. 3, 2009 by Xiangyun Kong
+   --------------------------------------------------------------------------------------------
+
+
+                On The Propagation of Restricted Attribute from Inliner to Optimizer
+
+                                 Xiangyun Kong
+
+                                  Feb. 4, 2009
+
+
+   In the current Open64 implementation, the restricted attribute on formal parameter
+   pointer is cleared by inliner. The reason is likely due to that the current 
+   optimizer does not handle the scoping of restricted pointers correctly, 
+   so when more than one calls to routines with restricted pointer parameters are inlined, 
+   alias information could become incorrect, and lead to incorrect optimizations.
+
+   The design proposed here is to allow the restricted attribute propagated 
+   from inliner, and optimizer will still be able to honor the scopes of the 
+   restricted attribute during alias analysis.
+
+   1. Add a restricted group ID for ST
+
+     By adding a restricted group ID into ST, restricted pointers from the same 
+     scope could be assigned the same group number, and 
+     restricted attributes could be considered only valid among the same 
+     group of restricted pointers.
+
+     For the current implementation, the field "pad" in ST will be used for group ID, 
+     and two access routines to the group id will be added as API in case changes of 
+     fields are needed in the future.
+
+   2. Inliner will keep the restricted attribute for the local
+        variable created for the restricted parameter.
+
+   3. Assign same group number to the restricted parameters in the same inline
+        instance.
+  
+       The group number can be assigned in two ways,
+
+       - During inlining, set the group number to the local STs created for the 
+         inlined formal which has restricted attribute.
+
+         This will require WHIRL level IR changes, but the information is more reliably 
+         tracked, and the group number could be used for implementing scopes of
+         general restricted pointers.
+
+     or
+
+       - At the beginning of optimizer, traverse the WHIRL tree, and find the INLINE BEGIN
+         pragma, and assign group number to the left ST of the following assignments which
+         have restricted attribute.
+
+         Since this will be done in the optimizer, a group number arrays can be used
+         to hold mappings between STs and the group numbers to avoid WHIRL IR changes. 
+         The drawback is that the optimizer will have to rely on the inliner 
+         to generate fixed code sequences to be able to track the accurate information. 
+
+      The implementation will use the first approach for a cleaner implemenation.
+
+   4. Change the alias rule for using restricted attribute
+
+      The current rule as described in from opt_alias_rules.h is,
+
+          If two pointers are restricted, they are not aliased unless they are the same.
+
+      But the actually implemented rule is more aggresive (in opt_alias_rules.cxx),
+      which can be described as,
+
+     4.1   A restricted pointer is treated the same as unique pointer. 
+          For two memory operations, if one of the base symbols is a restricted pointer,
+            they will not be aliased unless one of the following holds,
+
+             - they are the same, or 
+
+             - the other's base symbol is NULL, or
+
+             - the other's base symbol is the worst-case virtual variable
+
+
+      For the modified rule, the group number 0 will be used to represent restricted 
+      pointers not propagated from inliner, and the existing behaviour for 
+      the restricted pointers not propagated from the inliner will be kept. 
+      The implemented rule will become,
+
+     4.2  A restricted pointer with group ID 0 will be treated the same as a unique pointer,
+         the rule is the same as described in 4.1.
+          
+          A restricted pointer with group ID non-zero will be treated as a unique pointer
+          within the same group of pointers or variables, i.e., 
+
+           Given two memory operations, and corresponding base address symbols, 
+           if one of the base symbol is a restrict pointer with 
+           non-zero group ID, and the other base symbol's group ID 
+           is the same, they are not aliased unless they are the same.
+
+   5. Stop Copy Propgation on Restricted Pointers
+
+      Since the copy propagation could replace the restricted pointers with a non-restricted 
+      pointer or address expression, the transformation could make alias information
+      more conservative when alias analysis is re-applied.
+
+      As an example,
+
+            char * __restrict__ p1 = &x;
+            char * __restrict__ p2 = &x + 64;
+
+            for (int i = 0; i < n; i++) {
+               *(p1 + i) = *(p2 + i) + expr;
+            }
+
+      Before copy propagation is applied to the above code, the ISTORE and ILOAD 
+      inside the loop will be considered not aliased each other, since their base address 
+      are different restrict pointers.
+
+      After copy propagation, the above code may become something like,
+
+            for (int i = 0; i < n; i++) {
+               *(&x + i) = *(&x + 64 + i) + expr;
+            }
+
+
+      If alias analysis is re-applied, the ISTORE and ILOAD inside the loop may be considered
+      aliased, since they have same base address now.
+
+
+      By placing restrictions on copy propagation to avoid propagating restricted pointers,
+      the restricted attribute could still be used for the next round of alias analysis.
+
+      The restriction could be lifted for MAINOPT phase since the alias analysis 
+      will no longer be applied to the program unit.
+
+
+
+            
+
+
+
+   

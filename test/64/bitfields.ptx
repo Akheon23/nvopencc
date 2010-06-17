@@ -1,0 +1,64 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia3264_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling bitfields.i (/tmp/ccBI#.cG59YM)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:64
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"bitfields.i"
+
+	.shared .align 4 .b8 MyStruct[4];
+	.shared .align 4 .b8 x[4];
+
+	.entry test
+	{
+	.reg .u32 %r<17>;
+	.loc	1	16	0
+$LBB1_test:
+	.loc	1	17	0
+	ld.shared.s32 	%r1, [x+0];    	// id:9 x
+	and.b32 	%r2, %r1, 64512;     	// 
+	shr.s32 	%r3, %r2, 10;        	// 
+	and.b32 	%r4, %r1, 1008;      	// 
+	shr.u32 	%r5, %r4, 4;         	// 
+	add.s32 	%r6, %r3, %r5;       	// 
+	and.b32 	%r7, %r1, -16;       	// 
+	and.b32 	%r8, %r6, 15;        	// 
+	mov.s32 	%r8, %r8;            	// 
+	or.b32 	%r9, %r7, %r8;        	// 
+	st.shared.s32 	[x+0], %r9;    	// id:9 x
+	.loc	1	18	0
+	ld.shared.s32 	%r10, [MyStruct+0];	// id:8 MyStruct
+	and.b32 	%r11, %r10, 48;      	// 
+	shr.s32 	%r12, %r11, 4;       	// 
+	and.b32 	%r13, %r10, -4;      	// 
+	and.b32 	%r14, %r12, 3;       	// 
+	mov.s32 	%r14, %r14;          	// 
+	or.b32 	%r15, %r13, %r14;     	// 
+	st.shared.s32 	[MyStruct+0], %r15;	// id:8 MyStruct
+	.loc	1	19	0
+	exit;                         	// 
+$LDWend_test:
+	} // test
+

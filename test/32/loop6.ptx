@@ -1,0 +1,94 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia32_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling loop6.i (/tmp/ccBI#.XPqLX8)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:32
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"loop6.i"
+
+	.shared .align 4 .b8 data1[4096];
+	.shared .align 4 .b8 data2[4096];
+	.shared .align 4 .b8 data3[4096];
+
+	.entry doit
+	{
+	.reg .u32 %r<19>;
+	.reg .f32 %f<5>;
+	.reg .pred %p<6>;
+	.param .s32 __cudaparm_doit_start;
+	.param .s32 __cudaparm_doit_end;
+	.loc	1	28	0
+$LBB1_doit:
+	.loc	1	30	0
+	ld.param.s32 	%r1, [__cudaparm_doit_start];	// id:33 __cudaparm_doit_start+0x0
+	mov.s32 	%r2, %r1;            	// 
+	ld.param.s32 	%r3, [__cudaparm_doit_end];	// id:32 __cudaparm_doit_end+0x0
+	setp.le.s32 	%p1, %r3, %r1;   	// 
+	@%p1 bra 	$Lt_0_14;           	// 
+	sub.s32 	%r4, %r3, %r1;       	// 
+	mov.u32 	%r5, data2;          	// 
+	mov.u32 	%r6, data3;          	// 
+	mov.u32 	%r7, data1;          	// 
+	mov.s32 	%r8, %r4;            	// 
+$Lt_0_16:
+ //<loop> Loop body line 30, nesting depth: 1, estimated iterations: unknown
+	.loc	1	31	0
+	mul.lo.u32 	%r9, %r2, 32;     	// 
+	mov.s32 	%r10, 0;             	// 
+$Lt_0_19:
+ //<loop> Loop body line 31, nesting depth: 2, estimated iterations: 32
+	.loc	1	15	0
+	add.u32 	%r11, %r10, %r9;     	// 
+	mul.lo.u32 	%r12, %r11, 4;    	// 
+	add.u32 	%r13, %r12, %r5;     	// 
+	ld.shared.f32 	%f1, [%r13+0]; 	// id:34 data2+0x0
+	add.u32 	%r14, %r12, %r6;     	// 
+	ld.shared.f32 	%f2, [%r14+0]; 	// id:35 data3+0x0
+	add.f32 	%f3, %f1, %f2;       	// 
+	add.u32 	%r15, %r12, %r7;     	// 
+	st.shared.f32 	[%r15+0], %f3; 	// id:36 data1+0x0
+	mov.s32 	%r16, 32;            	// 
+	setp.le.s32 	%p2, %r10, %r16; 	// 
+	@%p2 bra 	$Lt_0_20;           	// 
+ //<loop> Part of loop body line 30, head labeled $Lt_0_16
+	bra.uni 	$Lt_0_1;             	// 
+$Lt_0_20:
+ //<loop> Part of loop body line 31, head labeled $Lt_0_19
+	add.s32 	%r10, %r10, 1;       	// 
+	mov.s32 	%r17, 32;            	// 
+	setp.ne.s32 	%p3, %r10, %r17; 	// 
+	@%p3 bra 	$Lt_0_19;           	// 
+$Lt_0_1:
+ //<loop> Part of loop body line 30, head labeled $Lt_0_16
+	.loc	1	31	0
+	add.s32 	%r2, %r2, 1;         	// 
+	setp.ne.s32 	%p4, %r2, %r3;   	// 
+	@%p4 bra 	$Lt_0_16;           	// 
+$Lt_0_14:
+	.loc	1	33	0
+	exit;                         	// 
+$LDWend_doit:
+	} // doit
+

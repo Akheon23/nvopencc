@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ln", "ln\ln.vcproj", "{85962905-9318-4502-B9DA-5B15E0EB4BD0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gcc", "msvc-gcc\gcc.vcproj", "{500C88EC-51B1-41CD-B662-CB220DE30B41}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ar", "msvc-gcc\ar.vcproj", "{BB801A70-92AA-4BAE-9343-5DA5ECB9E637}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{85962905-9318-4502-B9DA-5B15E0EB4BD0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{85962905-9318-4502-B9DA-5B15E0EB4BD0}.Debug|Win32.Build.0 = Debug|Win32
+		{85962905-9318-4502-B9DA-5B15E0EB4BD0}.Release|Win32.ActiveCfg = Release|Win32
+		{85962905-9318-4502-B9DA-5B15E0EB4BD0}.Release|Win32.Build.0 = Release|Win32
+		{500C88EC-51B1-41CD-B662-CB220DE30B41}.Debug|Win32.ActiveCfg = Debug|Win32
+		{500C88EC-51B1-41CD-B662-CB220DE30B41}.Debug|Win32.Build.0 = Debug|Win32
+		{500C88EC-51B1-41CD-B662-CB220DE30B41}.Release|Win32.ActiveCfg = Release|Win32
+		{500C88EC-51B1-41CD-B662-CB220DE30B41}.Release|Win32.Build.0 = Release|Win32
+		{BB801A70-92AA-4BAE-9343-5DA5ECB9E637}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BB801A70-92AA-4BAE-9343-5DA5ECB9E637}.Debug|Win32.Build.0 = Debug|Win32
+		{BB801A70-92AA-4BAE-9343-5DA5ECB9E637}.Release|Win32.ActiveCfg = Release|Win32
+		{BB801A70-92AA-4BAE-9343-5DA5ECB9E637}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

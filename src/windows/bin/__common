@@ -1,0 +1,50 @@
+SCRIPT="$(basename $0)"
+
+if [[ $# -lt 1 ]]; then
+  echo "$SCRIPT: INVALID INVOCATION" >&2
+  exit 1
+fi
+
+# Locate the Microsoft tools via the --msvc-root=... argument; if --msvc-root=... has not been
+# provided, look it up in the Windows registry.
+
+__THIS_DIR=$(cygpath -ma "$(dirname $0)/..")
+if [[ "$1" = --msvc-root=* ]]; then
+  __DIR="${1:12}"
+  shift
+else  
+  __DIR="$(regtool -q get '/HKLM/Software/Microsoft/VisualStudio/8.0/Setup/VS/ProductDir')/VC"
+fi
+__DIR=$(cygpath -m "$__DIR")
+
+function __invoke_cmd() {
+  local __CMD="$@"
+  [[ "$SUPER_VERBOSE" ]] && echo -en '\e[1;34m' >&2
+  [[ "$VERBOSE" && ! "$SUPER_VERBOSE" ]] && echo -n "$SCRIPT --->> " >&2
+  [[ "$VERBOSE" ]] && echo "$__CMD" >&2
+  [[ "$SUPER_VERBOSE" ]] && echo -en '\e[1;35m' >&2
+  eval "$__CMD"
+  __RET=$?
+  [[ "$SUPER_VERBOSE" ]] && echo -en '\e[m' >&2
+  return $__RET  
+}
+
+function __check_exec() {
+  local F
+  for F in "$@"; do
+    if [[ ! -x "$F" ]]; then
+      echo "$SCRIPT: CANNOT FIND '$F'"
+      exit 1
+    fi
+  done    
+}  
+
+function __build_browse_info() {
+  __CMD="$__BSCMAKE $__BSCMAKE_VERSION"
+  [[ "$VERBOSE" ]] && __CMD="$__CMD /v"
+  __CMD="$__CMD /n /Es /o ${__OUT%.*}.bsc"
+  echo "$__BROWSE_FILES" >${__OUT%.*}.bsc.cmd
+  __CMD="$__CMD @${__OUT%.*}.bsc.cmd"
+  __invoke_cmd "$__CMD"
+  __RET=$?
+}

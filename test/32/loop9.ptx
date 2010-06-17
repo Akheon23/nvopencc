@@ -1,0 +1,182 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia32_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling loop9.i (/tmp/ccBI#.QLXrVV)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:32
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"loop9.i"
+
+	.shared .align 4 .b8 data1[4096];
+	.shared .align 4 .b8 data2[4096];
+	.shared .align 4 .b8 data3[4096];
+
+	.entry doit
+	{
+	.reg .u32 %r<39>;
+	.reg .f32 %f<50>;
+	.reg .pred %p<5>;
+	.loc	1	10	0
+$LBB1_doit:
+	.loc	1	12	0
+	mov.s32 	%r1, %r2;            	// 
+	mov.s32 	%r3, %r1;            	// 
+	mov.s32 	%r4, %r5;            	// 
+	setp.ge.s32 	%p1, %r1, %r4;   	// 
+	@%p1 bra 	$Lt_0_9;            	// 
+	mov.u32 	%r6, data2;          	// 
+	sub.s32 	%r7, %r4, %r1;       	// 
+	add.s32 	%r8, %r7, 3;         	// 
+	shr.s32 	%r9, %r8, 31;        	// 
+	mov.s32 	%r10, 3;             	// 
+	and.b32 	%r11, %r9, %r10;     	// 
+	add.s32 	%r12, %r11, %r8;     	// 
+	shr.s32 	%r13, %r12, 2;       	// 
+	mov.s32 	%r14, %r13;          	// 
+	mov.s32 	%r15, %r16;          	// 
+	sub.s32 	%r17, %r1, %r15;     	// 
+	add.s32 	%r18, %r1, %r15;     	// 
+	add.s32 	%r19, %r15, %r4;     	// 
+	mul.lo.u32 	%r20, %r18, 32;   	// 
+	mul.lo.u32 	%r21, %r19, 32;   	// 
+	add.u32 	%r22, %r17, %r20;    	// 
+	add.u32 	%r23, %r17, %r21;    	// 
+	mul.lo.u32 	%r24, %r22, 4;    	// 
+	mul.lo.u32 	%r25, %r23, 4;    	// 
+	add.u32 	%r26, %r24, %r6;     	// 
+	add.u32 	%r27, %r25, %r6;     	// 
+	mov.u32 	%r28, data3;         	// 
+	add.u32 	%r29, %r24, %r28;    	// 
+	mov.u32 	%r30, data1;         	// 
+	mov.s32 	%r31, %r14;          	// 
+$Lt_0_11:
+ //<loop> Loop body line 12, nesting depth: 1, estimated iterations: unknown
+	mov.s32 	%r32, %r13;          	// 
+	mov.s32 	%r33, %r24;          	// 
+	mov.s32 	%r34, %r26;          	// 
+	mov.s32 	%r35, %r29;          	// 
+	add.u32 	%r36, %r33, %r30;    	// 
+ //<loop> Part of loop body line 12, head labeled $Lt_0_11
+	mov.s32 	%r37, %r32;          	// 
+$Lt_0_14:
+ //<loop> Loop body line 12, nesting depth: 2, estimated iterations: unknown
+	.loc	1	15	0
+	ld.shared.f32 	%f1, [%r34+0]; 	// id:258 data2+0x0
+	ld.shared.f32 	%f2, [%r35+0]; 	// id:259 data3+0x0
+	mul.f32 	%f3, %f1, %f2;       	// 
+	st.shared.f32 	[%r36+0], %f3; 	// id:260 data1+0x0
+	.loc	1	16	0
+	ld.shared.f32 	%f4, [%r34+4]; 	// id:261 data2+0x0
+	ld.shared.f32 	%f5, [%r35+4]; 	// id:262 data3+0x0
+	mul.f32 	%f6, %f4, %f5;       	// 
+	st.shared.f32 	[%r36+4], %f6; 	// id:263 data1+0x0
+	.loc	1	17	0
+	ld.shared.f32 	%f7, [%r34+8]; 	// id:264 data2+0x0
+	ld.shared.f32 	%f8, [%r35+8]; 	// id:265 data3+0x0
+	mul.f32 	%f9, %f7, %f8;       	// 
+	st.shared.f32 	[%r36+8], %f9; 	// id:266 data1+0x0
+	.loc	1	18	0
+	ld.shared.f32 	%f10, [%r34+12];	// id:267 data2+0x0
+	ld.shared.f32 	%f11, [%r35+12];	// id:268 data3+0x0
+	mul.f32 	%f12, %f10, %f11;    	// 
+	st.shared.f32 	[%r36+12], %f12;	// id:269 data1+0x0
+	.loc	1	20	0
+	ld.shared.f32 	%f13, [%r34+128];	// id:270 data2+0x0
+	ld.shared.f32 	%f14, [%r35+128];	// id:271 data3+0x0
+	mul.f32 	%f15, %f13, %f14;    	// 
+	st.shared.f32 	[%r36+128], %f15;	// id:272 data1+0x0
+	.loc	1	21	0
+	ld.shared.f32 	%f16, [%r34+132];	// id:273 data2+0x0
+	ld.shared.f32 	%f17, [%r35+132];	// id:274 data3+0x0
+	mul.f32 	%f18, %f16, %f17;    	// 
+	st.shared.f32 	[%r36+132], %f18;	// id:275 data1+0x0
+	.loc	1	22	0
+	ld.shared.f32 	%f19, [%r34+136];	// id:276 data2+0x0
+	ld.shared.f32 	%f20, [%r35+136];	// id:277 data3+0x0
+	mul.f32 	%f21, %f19, %f20;    	// 
+	st.shared.f32 	[%r36+136], %f21;	// id:278 data1+0x0
+	.loc	1	23	0
+	ld.shared.f32 	%f22, [%r34+140];	// id:279 data2+0x0
+	ld.shared.f32 	%f23, [%r35+140];	// id:280 data3+0x0
+	mul.f32 	%f24, %f22, %f23;    	// 
+	st.shared.f32 	[%r36+140], %f24;	// id:281 data1+0x0
+	.loc	1	25	0
+	ld.shared.f32 	%f25, [%r34+256];	// id:282 data2+0x0
+	ld.shared.f32 	%f26, [%r35+256];	// id:283 data3+0x0
+	mul.f32 	%f27, %f25, %f26;    	// 
+	st.shared.f32 	[%r36+256], %f27;	// id:284 data1+0x0
+	.loc	1	26	0
+	ld.shared.f32 	%f28, [%r34+260];	// id:285 data2+0x0
+	ld.shared.f32 	%f29, [%r35+260];	// id:286 data3+0x0
+	mul.f32 	%f30, %f28, %f29;    	// 
+	st.shared.f32 	[%r36+260], %f30;	// id:287 data1+0x0
+	.loc	1	27	0
+	ld.shared.f32 	%f31, [%r34+264];	// id:288 data2+0x0
+	ld.shared.f32 	%f32, [%r35+264];	// id:289 data3+0x0
+	mul.f32 	%f33, %f31, %f32;    	// 
+	st.shared.f32 	[%r36+264], %f33;	// id:290 data1+0x0
+	.loc	1	28	0
+	ld.shared.f32 	%f34, [%r34+268];	// id:291 data2+0x0
+	ld.shared.f32 	%f35, [%r35+268];	// id:292 data3+0x0
+	mul.f32 	%f36, %f34, %f35;    	// 
+	st.shared.f32 	[%r36+268], %f36;	// id:293 data1+0x0
+	.loc	1	30	0
+	ld.shared.f32 	%f37, [%r34+384];	// id:294 data2+0x0
+	ld.shared.f32 	%f38, [%r35+384];	// id:295 data3+0x0
+	mul.f32 	%f39, %f37, %f38;    	// 
+	st.shared.f32 	[%r36+384], %f39;	// id:296 data1+0x0
+	.loc	1	31	0
+	ld.shared.f32 	%f40, [%r34+388];	// id:297 data2+0x0
+	ld.shared.f32 	%f41, [%r35+388];	// id:298 data3+0x0
+	mul.f32 	%f42, %f40, %f41;    	// 
+	st.shared.f32 	[%r36+388], %f42;	// id:299 data1+0x0
+	.loc	1	32	0
+	ld.shared.f32 	%f43, [%r34+392];	// id:300 data2+0x0
+	ld.shared.f32 	%f44, [%r35+392];	// id:301 data3+0x0
+	mul.f32 	%f45, %f43, %f44;    	// 
+	st.shared.f32 	[%r36+392], %f45;	// id:302 data1+0x0
+	.loc	1	33	0
+	ld.shared.f32 	%f46, [%r34+396];	// id:303 data2+0x0
+	ld.shared.f32 	%f47, [%r35+396];	// id:304 data3+0x0
+	mul.f32 	%f48, %f46, %f47;    	// 
+	st.shared.f32 	[%r36+396], %f48;	// id:305 data1+0x0
+	add.u32 	%r36, %r36, 512;     	// 
+	add.u32 	%r35, %r35, 512;     	// 
+	add.u32 	%r34, %r34, 512;     	// 
+	setp.lt.s32 	%p2, %r34, %r27; 	// 
+	@%p2 bra 	$Lt_0_14;           	// 
+ //<loop> Part of loop body line 12, head labeled $Lt_0_11
+	add.s32 	%r3, %r3, 4;         	// 
+	add.u32 	%r27, %r27, 16;      	// 
+	add.u32 	%r24, %r33, 16;      	// 
+	add.u32 	%r29, %r29, 16;      	// 
+	add.u32 	%r26, %r26, 16;      	// 
+	setp.lt.s32 	%p3, %r3, %r4;   	// 
+	@%p3 bra 	$Lt_0_11;           	// 
+$Lt_0_9:
+	.loc	1	37	0
+	exit;                         	// 
+$LDWend_doit:
+	} // doit
+

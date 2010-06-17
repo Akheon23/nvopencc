@@ -1,0 +1,33 @@
+/*
+ * a simple test
+ */
+
+__shared__ float data1[32];
+__shared__ float data2[32];
+__shared__ float data3[32];
+
+__device__ void mult(__shared__ float d1[32],
+                     __shared__ float d2[32],
+                     __shared__ float d3[32],
+                     int idx) 
+{
+  int i;
+  int j, k, l;
+  j = -1;
+  k = 0;
+  l = 1;
+  for (i = 0; i < 31; i++) {
+    j = i-1;
+    k = i;
+    l = i+1;
+    d1[i+j+k+l] = 1.0;
+  }
+}
+
+__global__ void doit(int start, int end) {
+  int i = 99;
+    mult(data1, data2, data3, i);
+}
+
+
+

@@ -1,0 +1,65 @@
+Open64 Coding Conventions
+-------------------------
+
+First of all, let me stress that following certain coding conventions
+is not a guarantee of good code.  The most important thing to do is to
+write clear, well-organized code with useful comments.  These coding
+conventions just make it easier for other people to read your code
+in the context of other Open64 code.
+
+The following list is not ordered, it is just a list of items to be aware of:
+
+* Indentation and tabs.  
+There is no set number of spaces you need to use for indentation, 
+just be sure to indent.  The original code was written assuming 8 spaces 
+to a tab (the vi default).  So if you use another editor with different 
+spacing the indentation may look confusing.  The best solution to this 
+going forward is to avoid using tabs for indentation and instead use 
+blank spaces.  But it is also suggested that you set your tabs to 8 spaces 
+so you can view the code better.  
+
+* Use inline accessors rather than macros.
+The problem with #define macros is that most debuggers can't handle them,
+so instead use inline functions, e.g.
+inline char *
+ST_name (const ST& s)         { return &Str_Table[ST_name_idx (s)]; }
+
+* Identifier names.
+Use a common prefix for all related accessors and functions.
+This helps to identify which module a routine is defined in, 
+e.g.  WN_<name> for the whirl routines.
+Use underscores between parts of the name, e.g. Expand_Immediate_Into_Register.
+Capitalize the start of function names and global variables, don't capitalize
+local variables or parameters.  
+Use all caps for globally-defined types, e.g. CODEREP
+
+* Integer types.
+To help with porting between 32 and 64bit, don't use the basic C integer types,
+instead use the defs.h sized integer types, e.g. INT64 for a 64bit integer.
+
+* Avoid global variables
+In general you should avoid using global variables other than flags.
+Instead pass the info as parameters.
+
+* Avoid virtual functions.
+They slow down the compile speed of the compiler.
+Generic programming (STL) is encouraged since that can be resolved 
+at compile time.
+
+* Use asserts and traces.
+Use FmtAssert and Is_True to check assumptions.
+It is better to get a compile-time assert than a run-time failure.
+Add traces with Get_Trace to help debugging.  Spending some time to
+build in tracing support at the beginning will help reduce later triaging time.
+
+* Use mempools and CXX_NEW
+To allocate heap memory, use mempools and CXX_NEW rather than malloc/new.
+
+* Move target-specific code into separate files.
+As we support more targets with Open64 it is important to try
+and separate out the target-specific code as much as possible
+with clean interfaces.  In general, try to put target-specific
+code into target-specific files rather than #ifdef everywhere,
+e.g. there is a cgdwarf_targ for each target that cgdwarf can
+make calls to.
+

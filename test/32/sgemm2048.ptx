@@ -1,0 +1,86 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia32_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling sgemm2048.i (/tmp/ccBI#.pBGoiF)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:32
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"sgemm2048.i"
+
+	.shared .align 4 .b8 BB[4224];
+
+	.entry sgemm_main_gld_hw_na_nb_fulltile
+	{
+	.reg .u32 %r<24>;
+	.reg .f32 %f<4>;
+	.reg .pred %p<4>;
+	.param .align 4 .b8 __cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms[16];
+	.param .u32 __cudaparm_sgemm_main_gld_hw_na_nb_fulltile_tid;
+	.loc	1	12	0
+$LBB1_sgemm_main_gld_hw_na_nb_fulltile:
+	.loc	1	15	0
+	ld.param.u32 	%r1, [__cudaparm_sgemm_main_gld_hw_na_nb_fulltile_tid];	// id:26 __cudaparm_sgemm_main_gld_hw_na_nb_fulltile_tid+0x0
+	ld.param.u32 	%r2, [__cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms+8];	// id:24 __cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms+0x8
+	mov.s32 	%r3, 0;              	// 
+	setp.eq.u32 	%p1, %r2, %r3;   	// 
+	@%p1 bra 	$Lt_0_5;            	// 
+	mov.u32 	%r4, BB;             	// 
+	add.u32 	%r5, %r2, 31;        	// 
+	shr.s32 	%r6, %r5, 31;        	// 
+	mov.s32 	%r7, 31;             	// 
+	and.b32 	%r8, %r6, %r7;       	// 
+	add.s32 	%r9, %r8, %r5;       	// 
+	shr.s32 	%r10, %r9, 5;        	// 
+	ld.param.u32 	%r11, [__cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms+12];	// id:27 __cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms+0xc
+	mul.lo.u32 	%r12, %r1, 4;     	// 
+	mul.lo.u32 	%r13, %r11, 4;    	// 
+	add.u32 	%r14, %r12, %r4;     	// 
+	ld.param.u32 	%r15, [__cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms+0];	// id:28 __cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms+0x0
+	add.u32 	%r16, %r15, %r13;    	// 
+	mov.u32 	%r17, 0;             	// 
+	mov.s32 	%r18, %r10;          	// 
+$Lt_0_7:
+ //<loop> Loop body line 15, nesting depth: 1, estimated iterations: unknown
+	.loc	1	19	0
+	add.u32 	%r14, %r14, 4;       	// 
+	.loc	1	21	0
+	ld.global.f32 	%f1, [%r16+0]; 	// id:29
+	st.shared.f32 	[%r14+0], %f1; 	// id:30 BB+0x0
+	add.u32 	%r17, %r17, 32;      	// 
+	add.u32 	%r16, %r16, 128;     	// 
+	setp.gt.u32 	%p2, %r2, %r17;  	// 
+	@%p2 bra 	$Lt_0_7;            	// 
+$Lt_0_5:
+	mov.u32 	%r19, BB;            	// 
+	.loc	1	23	0
+	mul.lo.u32 	%r20, %r1, 4;     	// 
+	add.u32 	%r21, %r19, %r20;    	// 
+	ld.shared.f32 	%f2, [%r21+0]; 	// id:31 BB+0x0
+	ld.param.u32 	%r22, [__cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms+4];	// id:32 __cudaparm_sgemm_main_gld_hw_na_nb_fulltile_parms+0x4
+	st.global.f32 	[%r22+0], %f2; 	// id:33
+	.loc	1	24	0
+	exit;                         	// 
+$LDWend_sgemm_main_gld_hw_na_nb_fulltile:
+	} // sgemm_main_gld_hw_na_nb_fulltile
+

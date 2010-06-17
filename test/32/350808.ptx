@@ -1,0 +1,75 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia32_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling 350808.i (/tmp/ccBI#.4WfJOV)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:32
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"350808.i"
+
+	.shared .align 4 .b8 childBuf[48];
+
+	.entry cudaRunQueriesCUDA
+	{
+	.reg .u32 %r<15>;
+	.reg .pred %p<4>;
+	.param .u32 __cudaparm_cudaRunQueriesCUDA_index;
+	.param .u32 __cudaparm_cudaRunQueriesCUDA_searchResultsD;
+	.param .s32 __cudaparm_cudaRunQueriesCUDA_pos;
+	.loc	1	7	0
+$LBB1_cudaRunQueriesCUDA:
+	.loc	1	8	0
+	ld.param.s32 	%r1, [__cudaparm_cudaRunQueriesCUDA_pos];	// id:23 __cudaparm_cudaRunQueriesCUDA_pos+0x0
+	mul.lo.u32 	%r2, %r1, 4;      	// 
+	mov.u32 	%r3, childBuf;       	// 
+	add.u32 	%r4, %r2, %r3;       	// 
+	ld.shared.u32 	%r5, [%r4+0];  	// id:24 childBuf+0x0
+	mul.lo.u32 	%r6, %r5, 4;      	// 
+	ld.param.u32 	%r7, [__cudaparm_cudaRunQueriesCUDA_index];	// id:25 __cudaparm_cudaRunQueriesCUDA_index+0x0
+	add.u32 	%r8, %r7, %r6;       	// 
+	ld.global.s32 	%r9, [%r8+0];  	// id:26
+	mov.s32 	%r10, -1;            	// 
+	setp.eq.s32 	%p1, %r9, %r10;  	// 
+	@%p1 bra 	$Lt_0_5;            	// 
+$Lt_0_7:
+ //<loop> Loop body line 11
+	.loc	1	11	0
+	add.s32 	%r5, %r5, 1;         	// 
+	st.shared.s32 	[%r4+0], %r5;  	// id:27 childBuf+0x0
+	add.u32 	%r8, %r8, 4;         	// 
+	.loc	1	12	0
+	ld.global.s32 	%r11, [%r8+0]; 	// id:28
+	mov.s32 	%r12, -1;            	// 
+	setp.ne.s32 	%p2, %r11, %r12; 	// 
+	@%p2 bra 	$Lt_0_7;            	// 
+	mov.s32 	%r9, %r11;           	// 
+$Lt_0_5:
+	.loc	1	14	0
+	ld.param.u32 	%r13, [__cudaparm_cudaRunQueriesCUDA_searchResultsD];	// id:29 __cudaparm_cudaRunQueriesCUDA_searchResultsD+0x0
+	st.global.s32 	[%r13+0], %r9; 	// id:30
+	.loc	1	15	0
+	exit;                         	// 
+$LDWend_cudaRunQueriesCUDA:
+	} // cudaRunQueriesCUDA
+

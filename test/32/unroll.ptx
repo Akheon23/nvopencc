@@ -1,0 +1,184 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia32_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling unroll.i (unroll.BI)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:32
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"unroll.i"
+
+	.global .s32 sum;
+
+	.entry test0
+	{
+	.reg .u32 %r<5>;
+	.loc	1	4	0
+ //   1  __attribute__((__global__)) int sum;
+ //   2  
+ //   3  __attribute__((__global__)) void test0 (void)
+ //   4  {
+$LBB1_test0:
+	.loc	1	7	0
+ //   5  int i;
+ //   6  for (i = 0; i < 8; i++) {
+ //   7     sum += i*i + i;
+	ld.global.s32 	%r1, [sum];    	// id:14 sum+0x0
+	add.s32 	%r2, %r1, 2;         	// 
+	add.s32 	%r2, %r2, 6;         	// 
+	add.s32 	%r2, %r2, 12;        	// 
+	add.s32 	%r2, %r2, 20;        	// 
+	add.s32 	%r2, %r2, 30;        	// 
+	add.s32 	%r3, %r2, 98;        	// 
+	st.global.s32 	[sum], %r3;    	// id:14 sum+0x0
+	.loc	1	9	0
+ //   8  }
+ //   9  }
+	exit;                         	// 
+$LDWend_test0:
+	} // test0
+
+	.entry test1
+	{
+	.reg .u32 %r<5>;
+	.loc	1	12	0
+ //  10  
+ //  11  __attribute__((__global__)) void test1 (void)
+ //  12  {
+$LBB1_test1:
+	.loc	1	15	0
+ //  13  int i;
+ //  14  #pragma unroll
+ //  15  for (i = 0; i < 8; i++) {
+	ld.global.s32 	%r1, [sum];    	// id:14 sum+0x0
+	add.s32 	%r2, %r1, 2;         	// 
+	add.s32 	%r2, %r2, 6;         	// 
+	add.s32 	%r2, %r2, 12;        	// 
+	add.s32 	%r2, %r2, 20;        	// 
+	add.s32 	%r2, %r2, 30;        	// 
+	add.s32 	%r3, %r2, 98;        	// 
+	st.global.s32 	[sum], %r3;    	// id:14 sum+0x0
+	.loc	1	17	0
+ //  16     sum += i*i + i;
+ //  17  }
+	exit;                         	// 
+$LDWend_test1:
+	} // test1
+
+	.entry test2
+	{
+	.reg .u32 %r<7>;
+	.reg .pred %p<3>;
+	.loc	1	20	0
+ //  18  }
+ //  19  
+ //  20  __attribute__((__global__)) void test2 (void)
+$LBB1_test2:
+	.loc	1	24	0
+ //  21  {
+ //  22  int i;
+ //  23  #pragma unroll 1
+ //  24  for (i = 0; i < 8; i++) {
+	ld.global.s32 	%r1, [sum];    	// id:14 sum+0x0
+	mov.s32 	%r2, 0;              	// 
+$Lt_2_7:
+ //<loop> Loop body line 24, nesting depth: 1, iterations: 8
+	.loc	1	23	0
+	mul.lo.s32 	%r3, %r2, %r2;    	// 
+	add.s32 	%r4, %r2, %r3;       	// 
+	add.s32 	%r1, %r1, %r4;       	// 
+	add.s32 	%r2, %r2, 1;         	// 
+	mov.s32 	%r5, 8;              	// 
+	setp.ne.s32 	%p1, %r2, %r5;   	// 
+	@%p1 bra 	$Lt_2_7;            	// 
+	st.global.s32 	[sum], %r1;    	// id:14 sum+0x0
+	.loc	1	25	0
+ //  25     sum += i*i + i;
+	exit;                         	// 
+$LDWend_test2:
+	} // test2
+
+	.entry test3
+	{
+	.reg .u16 %rh<4>;
+	.reg .u32 %r<9>;
+	.reg .pred %p<3>;
+	.loc	1	28	0
+ //  26  }
+ //  27  }
+ //  28  
+$LBB1_test3:
+	.loc	1	24	0
+	mov.s16 	%rh1, 1;             	// 
+	ld.global.s32 	%r1, [sum];    	// id:14 sum+0x0
+	mov.s32 	%r2, 0;              	// 
+$Lt_3_7:
+ //<loop> Loop body line 24, nesting depth: 1, iterations: 4
+	.loc	1	31	0
+ //  29  __attribute__((__global__)) void test3 (void)
+ //  30  {
+ //  31  int i;
+	mul.lo.s32 	%r3, %r2, %r2;    	// 
+	add.s32 	%r4, %r2, %r3;       	// 
+	add.s32 	%r1, %r1, %r4;       	// 
+	mul.wide.s16 	%r5, %rh1, %rh1;	// 
+	add.s32 	%r6, %r2, %r5;       	// 
+	add.s32 	%r7, %r1, %r6;       	// 
+	add.s32 	%r1, %r7, 1;         	// 
+	add.s32 	%r2, %r2, 2;         	// 
+	add.s16 	%rh1, %rh1, 2;       	// 
+	mov.s16 	%rh2, 9;             	// 
+	setp.ne.s16 	%p1, %rh1, %rh2; 	// 
+	@%p1 bra 	$Lt_3_7;            	// 
+	st.global.s32 	[sum], %r1;    	// id:14 sum+0x0
+	.loc	1	33	0
+ //  32  #pragma unroll 2
+ //  33  for (i = 0; i < 8; i++) {
+	exit;                         	// 
+$LDWend_test3:
+	} // test3
+
+	.entry test4
+	{
+	.reg .u32 %r<5>;
+	.loc	1	36	0
+ //  34     sum += i*i + i;
+ //  35  }
+ //  36  }
+$LBB1_test4:
+	.loc	1	39	0
+ //  37  
+ //  38  __attribute__((__global__)) void test4 (void)
+ //  39  {
+	ld.global.s32 	%r1, [sum];    	// id:14 sum+0x0
+	add.s32 	%r2, %r1, 72;        	// 
+	add.s32 	%r2, %r2, 30;        	// 
+	add.s32 	%r3, %r2, 6;         	// 
+	st.global.s32 	[sum], %r3;    	// id:14 sum+0x0
+	.loc	1	41	0
+ //  40  int i;
+ //  41  #pragma unroll 2
+	exit;                         	// 
+$LDWend_test4:
+	} // test4
+

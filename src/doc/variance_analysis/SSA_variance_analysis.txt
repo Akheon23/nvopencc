@@ -1,0 +1,485 @@
+Modification History
+
+Modified on March 15, 2009 by Xiangyun Kong
+
+  - Need to use iterative control dependences in computing control variance state
+
+  - Consider syncthreads semantics in computing control variance state   
+
+
+Initial version Created on Feb. 20, 2009 by Xiangyun Kong
+
+------------------------------------------------------------------------------
+
+              Variance Analysis on SSA-based IR (CODEREP/STMTREP)
+
+
+                           Xiangyun Kong
+
+                           Feb. 20, 2009
+
+
+ 1. Introduction
+
+    In a CUDA program, each thread in a thread block executes the same piece of code.
+    However, each thread could see different address or values where the expression 
+    has dependency on thread IDs. Variance analysis is to find where expressions
+    do or do not depend on thread IDs. The information can be used in the following
+    ways,
+
+      - In multi-core code generation, for threadID invariant code, the loops 
+        surrounding the code can be avoided.
+
+      - In optimization, if a condition is determined to be threadID invariant, 
+        optimizer could freely move code into branches under the condition 
+        without concerning about the divergence/covergence penalty.
+
+      - In LDU analysis, it is important to know if an address expression is invariant
+        in order to generate efficient LDU code.
+
+      - The optimizer could use the information to determine if synchronization under
+        a condition can cause program to hang in run-time.
+
+
+ 2. Variance Analysis
+
+    There are two ways for an expression to become thread variant.
+
+    2.1 From data-flow
+
+      An expression becomes thread variant if one of its operands is thread variant.
+
+      As an example, in the following code
+
+           S1:     A = threadIdx.x;
+                 ...
+           S2:     B = f(A);
+
+
+       In the statement S1, A become thread variant since it holds the thread index x.
+       Due to data-flow, B in S2 become variant, since A's value is used in computing B.
+                        
+
+    2.2 From control-flow
+
+      When the execution of a statement is determined by the condition, 
+      if the condition is variant, any variables modified by the statement
+      becomes thread variant.
+
+      Continue with the above example,
+
+           S1:     A = threadIdx.x;
+                 ...
+           S2:     B = f(A);
+                 ...
+           S3:     if (B > 10) {
+                  
+           S4:        C = expr
+
+                   }
+
+        Since B is thread variant, the condition B > 10 becomes thread variant, and
+        since S4's execution is determined by condition B > 10, the
+        variable C becomes thread variant.
+
+
+    So, intuitively, variant analysis should use data-flow and control dependences
+    to find all thread variants.
+
+
+ 3. Why a SSA-based Variance Analysis 
+
+    In Open64, a variance analysis has been implemented for multi-core path, 
+    which is based on def-use information on WHIRL.
+    However, the implementation is not complete for the following reasons,
+
+      - The implementation does not handle all input WHIRLs.
+
+      - The implementation uses Open64’s def-use package, which is 
+        incomplete and does not provide complete information for 
+        indirect accesses.
+
+      - The implementation relies on the high level WHIRL structures to provide the
+        control dependences, which is not always surfficient, i.e.,
+        when there are gotos in the code, the control dependence information 
+        may not be completely represented by the WHIRL high level structures.
+
+    So, a complete implementation is needed in order to use the analysis reliably.
+
+    The analysis can be implemented either on WHIRL or SSA-based IR. 
+    For implementing on WHIRL, we could try to make the existing implemention
+    complete by fixing the incomplete part of the implementation.
+
+    But there are some advantages of implementing the analysis on SSA-based IR,
+
+     - The full control dependences are represented and maintained in SSA-based IR, 
+       which is not present in WHIRL, and it is non-trival to compute control
+       dependences based on the WHIRL without duplicating some of the work done
+       in SSA-based IR.
+
+     - Alias and data-flow information is encoded into the IR, so the analysis
+       has the handy data-flow information, it should work for any input.
+
+
+ 4. SSA-based IR Summary 
+    
+    - CODEREP: The expression in SSA-based IR is represented by CODEREP.
+      CODEREP can be 
+
+         - a variable (VAR), 
+         - a address constant (LDA), 
+         - a dereference of an address expression (IVAR),
+         - a constant (CONST),
+         - a region constant (RCONST),
+         - an expression with an operator (OP)
+
+      An expression CODEREP can have one, two, or multiple operands.
+
+      An IVAR CODEREP could have some special operands depending on
+      the operators of the IVAR CODEREP.
+
+
+    - STMTREP: The statement in SSA-based IR is represented by STMTREP.
+      A STMTREP can have two operands, 
+
+         - Left-hand operand (Lhs), for representing the left hand of a
+           scalar assignment, or indirect stores.
+
+         - Right-hand operand (Rhs) are used for three purposes,
+
+           1) right hand of a scalar assignment, 
+
+           2) right hand of an indirect store
+
+           3) wrapup operand for other operators
+
+           As an example for 3), a CALL 
+
+               CALL  foo(p1, p2, ..., pn)
+
+           is represented in SSA-based IR as follows,
+
+               STMTREP 
+                  Operator    = OPR_CALL
+                  left-hand   = NULL
+                  right-hand  = CODEREP  (OP)  
+                                   Operator = OPR_CALL
+                                   operand-0  = CODEREP (CONST) IDNAME-foo
+                                   operand-1  = CODEREP (IVAR)  PARAM p1
+                                   operand-2  = CODEREP (IVAR)  PARAM p2             
+                                    ...
+                                   operand-n  = CODEREP (IVAR)  param p3
+
+            assume the call is by-reference. 
+
+    - BB_NODE: The BB_NODE or basic block is the basic component of the control
+      flow graph in SSA-based IR. A BB_NODE consists of a sequence of STMTREPs,
+      in which the BB_NODE can only be entered through the first STMTREP, and
+      exited through the last STMTREP. 
+
+      All control flow information are built based on BB_NODE. 
+
+      Control dependence based on BB_NODE is built and maintained in SSA-based IR.
+
+    - Alias and data-flow
+
+      1) All variables are represented by CODEREP.
+
+      2) Variables explicitly accessed appear as operands in a CODEREP or a STMTREP.
+
+      3) Variables implicitly accessed are represented by MU_NODE or CHI_NODE,
+
+        - MU_NODE represents an implicit use of a variable. A MU_NODE can appear in
+          a CODEREP (IVAR), or in a STMTREP as one of the mu_node in the mu_list.
+         
+                   MU(iuse_var)
+
+        - CHI_NODE represents a pair of implicit use and implicit def.
+          A CHI_NODE can only appear in a STMTREP as one of the elements in the chi_list.
+
+                  idef_var = CHI(iuse_var)
+                   
+      
+      4) All implicit definitions should only appear in STMTREP.
+
+      5) PHI_NODE is used to enforece single-definition in SSA.
+         PHI_NODE does not appear in any STMTREP, it appears in BB_NODEs.
+         The RESULT of the PHI_NODE is considered as a definition, and operands 
+         of the PHI_NODE is considered as a use, i.e.,
+
+             def_var = PHI(use_var1, use_var2, ..., use_vark)
+
+         Note that PHI_NODE serves as a bridge between multi definitions and their uses.
+         In the existing Open64 implementation, when the SSA-base IR is converted
+         to WHIRL, all PHI_NODEs are ignored, which is why PHI_NODE is
+         ignored when BB_NODE's control variant state is considered (see Step 5
+         in the algorithm). 
+
+      6) All CODEREPs from non-zero versions should have single definition, explicitly
+         or implicitly. CODEREPs from zero-version may have multiple definitions.
+   
+
+ 5. Variance Analysis Algorithm
+
+
+   Before desribing the algorithm, let's define some terms.
+
+   - Variant State can be annoated by the following enum type,
+
+             typedef enum {
+               ThreadIdx_Invariant       = 0,
+               ThreadIdx_X_Variant       = 1,
+               ThreadIdx_Y_Variant       = 2,
+               ThreadIdx_XY_Variant      = 3,
+               ThreadIdx_Z_Variant       = 4,
+               ThreadIdx_XZ_Variant      = 5,
+               ThreadIdx_YZ_Variant      = 6,
+               ThreadIdx_XYZ_VARIANT     = 7
+             } ThreadIdx_VAR_STATE;
+
+
+     The combination of two enum states should use
+     bitwise OR operation. 
+
+   - Variant state of a CODEREP
+
+    The variant state of a CODEREP can be described by the enum type
+    above. The state can be kept and checked for changes.
+
+   - Control Variant State for a basc block (BB_NODE)
+
+     The control variant state is combining variant state of all 
+     control dependent BB_NODES.  I.e., for the following code,
+
+           if (cond1) {
+
+               if (cond2) {
+ 
+                   BB_NODE_1
+
+               }
+
+               BB_NODE_2
+
+           }
+
+     
+     BB_NODE_1's control dependents are cond1 and cond2, and its control
+     variant state should be combining variant state of cond1 and cond2,
+
+           BB_NODE_1->control_variant_state == cond1->variant_state | cond2->variant_state
+
+     Similarly, for BB_NODE_2, its only control dependent is cond1, and its control
+     variant state is the same as cond1's variant state.
+              
+           BB_NODE_2->control_variant_satte == cond1->variant_state
+
+   
+   The algorithm proposed here is based on the similar idea as used in the 
+   current implementation.
+   
+   Intuitively, the algorithm is a work list algorithm, 
+
+
+    Step 1. First, all CODEREPs' variant state are initialized to ThreadIdx_Invariant
+                   all BB_NODE's control variant states are initialized to ThreadIdx_Invariant 
+
+    Step 2. Collect the initial work list (STACK) by,
+
+     - Collect a list of CODEREPs which directly represent the 
+       ThreadIdx.x, ThreadIdx.y, and ThreadIdx.z, and set the variant state of
+       those CODEREPs accordinly.
+
+     - Go through the program unit once, for each BB_NODE,
+
+      1) Compute iterative control dependences for the BB_NODE, and
+
+      2) to find all unknown calls, and
+         atomic intrinsic calls which could depend on ThreadIdx, and consider
+         all those affected CODEREPs as variants to all those ThreadIdx, and
+    
+      3) to find which contains calls to syncthreads, and mark the 
+         condition's variance state of all
+         control dependence of the BB_NODE as "MUST be thread-invariant".     
+
+    Step 3. Build a forward-data-flow MAP among CODEREPs
+
+    Step 4. Now use forward-data-flow on the work list
+
+       do the following until the work list (STACK) is EMPTY
+
+      - POP a CODEREP (cr) from the work list
+
+      - For each CODEREP (acr) affected by the cr - based on forward-data-flow MAP
+
+          Add cr's variant state to the acr's variant state
+
+          if acr's variant state is changed
+
+              PUSH acr to the work list
+
+          endif
+
+        end For
+
+    Step 5. Use Iterative Control Dependence to collect affected CODEREPs from each BB_NODE
+
+        For each BB_NODE in the Control Flow
+
+           Re-compute the BB_NODE's control variant state based on
+              iterative control dependences minus the ones which are marked as
+              "MUST be thread-invariant" in Step 2.
+  
+           if the BB_NODE's control variant state is changed
+
+              For each STMTREP in the BB_NODE
+
+                 For each CODEREP (dcr) defined in the STMTREP
+         
+                    Add the BB_NODE's control variant state to the dcr's variant state
+
+                    if the dcr's variant state is changed
+
+                        PUSH the dcr to the work list
+
+                    end if
+
+                 end For // each CODEREP
+
+              end For // each STMTP
+
+           end if // the BB_NODE's control
+
+        end For // each BB_NODE
+
+     Step 6.  if work list is not EMPTY, goto Step 4, otherwise DONE.
+
+
+ 6. Implementation Details
+
+  6.1  The variance analysis is implemented as a container class CR_VarianceMap, 
+       which provides methods for building the variance information, and
+       retrieving information on each given CODEREP or STMTREP.
+
+       The analysis could be invoked anywhere after SSA-based IR is available,
+       and before converting back to WHIRL.
+
+       The following sequences of calls should be used to
+       invoke the analysis,
+
+           CR_VarianceMap *cr_map = new CR_VarianceMap(program_codemap);
+           cr_map->Setup_coderep_tid_var_info();
+
+       At this point, the CODEREP's variance information can be retrieved, and the
+       the following interfaces can be used to retrieve the variant state of
+       a given CODEREP or STMTREP,
+              
+           cr_map->CR_get_tid_var_state(CODEREP *);
+
+           cr_map->STMT_get_tid_var_state(STMTREP *);
+
+       When it is done, 
+
+           delete cr_map;
+
+       Here are the public interfaces of the class look like,
+
+        class CR_VarianceMap
+        {
+
+        public:
+          CR_VarianceMap (CODEMAP *codemap);
+
+          ~CR_VarianceMap(void);
+
+          // interface for getting the ThreadID variant state for a CODEREP
+          ThreadIdx_VAR_STATE CR_get_tid_var_state(CODEREP *cr) const;
+
+          // interface for getting the ThreadID variant state for a STMTREP
+          //
+          ThreadIdx_VAR_STATE STMT_get_tid_var_state (STMTREP *stmt) const;
+
+          // The interface for invoking the thread-ID variance analysis
+          //
+          void Setup_coderep_tid_var_info(void);
+        };
+
+
+  6.2  Forward data-flow building is implemented as another independent class
+       targeting for reuse. It provides interfaces for building and
+       walk through the affected CODEREPs for a given CODEREP.
+
+       Here are the public interfaces of the class look like,
+ 
+       class CODEREP_AFFECT_MAP
+       {
+
+       public:
+         CODEREP_AFFECT_MAP(CODEMAP *cmap);
+         ~CODEREP_AFFECT_MAP();
+
+        // The interface for building the information
+        void CFG_setup_coderep_affect_info (void);
+
+        // Traverse all the affected coderep and apply the func
+        void Walk_all_affected_coderep (CODEREP *cr, 
+                                        CODEREP_DEF_USE_WALK *tr,
+                                        STACK<CODEREP *> *work_list);
+
+       };
+
+
+       Internally, the forward data-flow is represented by two lists
+       for each CODEREP. The rules for adding a CODEREP or STMTREP
+       to those lists are, 
+
+     6.2.1  Given two CODEREPs cr1, and cr2, cr2 is affected by cr1 if
+
+       - cr1 is an operand of cr2, for the following relations,
+
+            cr2  :  cr1 op ...
+            cr2  :  ... op cr1
+
+       - cr2 is the left-hand operand of a scalar-store STMTREP, and cr1 is 
+         the right-hand operand of the same STMTREP, for 
+         relation in the assignment like, 
+
+             cr2 = cr1
+
+       - cr1 and cr2 appear in the same CHI_NODE, and cr1 is the operand, and
+          cr2 is tre RESULT, for code like
+
+             cr2 = CHI(cr1)
+
+       - cr1 and cr2 appear in the same PHI_NODE, and cr1 is one of the operands,
+          and cr2 is the result, for something like,
+
+             cr2 = PHI(..., cr1, ...)
+
+
+       - cr2 is an IVAR CODEREP, and one of the following is TRUE,
+
+         1)  cr1 is the operand of the MU_NODE, or
+
+         2)  cr1 is the Index() of cr2 (ILOADX), or
+
+         3)  cr1 is the Ilod_base() of cr2 (ILOAD), or
+
+         4)  cr1 is the Istr_base() of cr2 (ILOAD), or
+
+         5)  cr1 is the Mlod_size() of cr2 (MLOAD) 
+
+         The rules for IVAR are based on how the original WHIRL code 
+         represented in the SSA-based IR. Each IVAR may have one MU_NODE,
+         and depends on where the IVAR comes from, it may have some
+         special fields set as described above in 2) to 5).         
+         
+                  
+      6.2.2 Given a CODEREP cr, and a STMTREP stmt, the stmt is affected by cr if
+
+       - cr is an operand of stmt, or
+
+       - cr is one MU_NODE's operand in stmt->mu_list.         
+
+        The rules for STMTREP are based on how STMTREP is formed, which is summaried in
+        section 4 of this document above.

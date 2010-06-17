@@ -1,0 +1,38 @@
+#!/bin/bash
+source $(dirname $0)/__common
+
+__SOURCE=""
+__TARGET=""
+__OPTS=""
+__CMD="cp"
+
+while [[ $# -ge 1 ]]; do
+  __ARG="$1"
+  shift
+  case $__ARG in
+    -s )
+      ;;
+    -f )
+      __OPTS="$__OPTS $__ARG"
+      ;;
+    -sf )
+      __OPTS="$__OPTS -f"
+      ;;
+    * ) 
+      if [[ ! "$__SOURCE" ]]; then
+        __SOURCE="$__ARG"
+      else
+        __TARGET="$__ARG"
+      fi  
+      ;;
+  esac
+done
+
+__TRG=$(dirname $__TARGET)
+while [[ "$__TRG" != "." && $__SOURCE = ../* ]]; do
+  __SOURCE=${__SOURCE:3}
+  __TRG=$(dirname $__TRG)
+done
+
+__CMD="$__CMD $__OPTS $__SOURCE $__TARGET"
+__invoke_cmd "$__CMD"

@@ -1,0 +1,122 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia3264_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling loop8.i (/tmp/ccBI#.NkR9RM)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:64
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"loop8.i"
+
+	.shared .align 4 .b8 data1[12288];
+
+	.entry doit
+	{
+	.reg .u32 %r<18>;
+	.reg .u64 %rd<7>;
+	.reg .f32 %f<25>;
+	.reg .pred %p<5>;
+	.loc	1	7	0
+$LBB1_doit:
+	.loc	1	9	0
+	mov.s32 	%r1, %r2;            	// 
+	mov.s32 	%r3, %r1;            	// 
+	mov.s32 	%r4, %r5;            	// 
+	setp.le.s32 	%p1, %r4, %r1;   	// 
+	@%p1 bra 	$Lt_0_9;            	// 
+	sub.s32 	%r6, %r4, %r1;       	// 
+	add.s32 	%r7, %r6, 7;         	// 
+	shr.s32 	%r8, %r7, 31;        	// 
+	mov.s32 	%r9, 7;              	// 
+	and.b32 	%r10, %r8, %r9;      	// 
+	add.s32 	%r11, %r10, %r7;     	// 
+	shr.s32 	%r12, %r11, 3;       	// 
+	cvt.s64.s32 	%rd1, %r1;       	// 
+	mov.u64 	%rd2, data1;         	// 
+	mul.lo.u64 	%rd3, %rd1, 132;  	// 
+	add.u64 	%rd4, %rd2, %rd3;    	// 
+	mov.s32 	%r13, %r12;          	// 
+$Lt_0_11:
+ //<loop> Loop body line 9, nesting depth: 1, estimated iterations: unknown
+	.loc	1	10	0
+	mov.s32 	%r14, %r1;           	// 
+	mov.s32 	%r15, %r6;           	// 
+	mov.s64 	%rd5, %rd4;          	// 
+ //<loop> Part of loop body line 9, head labeled $Lt_0_11
+	mov.s32 	%r16, %r15;          	// 
+$Lt_0_14:
+ //<loop> Loop body line 10, nesting depth: 2, estimated iterations: unknown
+	.loc	1	11	0
+	ld.shared.f32 	%f1, [%rd5+8192];	// id:89 data1+0x0
+	ld.shared.f32 	%f2, [%rd5+4096];	// id:90 data1+0x0
+	mul.f32 	%f3, %f2, %f1;       	// 
+	st.shared.f32 	[%rd5+0], %f3; 	// id:91 data1+0x0
+	.loc	1	12	0
+	ld.shared.f32 	%f4, [%rd5+4224];	// id:92 data1+0x0
+	mul.f32 	%f5, %f4, %f1;       	// 
+	st.shared.f32 	[%rd5+128], %f5;	// id:93 data1+0x0
+	.loc	1	13	0
+	ld.shared.f32 	%f6, [%rd5+4352];	// id:94 data1+0x0
+	ld.shared.f32 	%f7, [%rd5+8448];	// id:95 data1+0x0
+	mul.f32 	%f8, %f6, %f7;       	// 
+	st.shared.f32 	[%rd5+256], %f8;	// id:96 data1+0x0
+	.loc	1	14	0
+	ld.shared.f32 	%f9, [%rd5+4480];	// id:97 data1+0x0
+	ld.shared.f32 	%f10, [%rd5+8576];	// id:98 data1+0x0
+	mul.f32 	%f11, %f9, %f10;     	// 
+	st.shared.f32 	[%rd5+384], %f11;	// id:99 data1+0x0
+	.loc	1	15	0
+	ld.shared.f32 	%f12, [%rd5+4608];	// id:100 data1+0x0
+	ld.shared.f32 	%f13, [%rd5+8704];	// id:101 data1+0x0
+	mul.f32 	%f14, %f12, %f13;    	// 
+	st.shared.f32 	[%rd5+512], %f14;	// id:102 data1+0x0
+	.loc	1	16	0
+	ld.shared.f32 	%f15, [%rd5+4736];	// id:103 data1+0x0
+	ld.shared.f32 	%f16, [%rd5+8832];	// id:104 data1+0x0
+	mul.f32 	%f17, %f15, %f16;    	// 
+	st.shared.f32 	[%rd5+640], %f17;	// id:105 data1+0x0
+	.loc	1	17	0
+	ld.shared.f32 	%f18, [%rd5+4864];	// id:106 data1+0x0
+	ld.shared.f32 	%f19, [%rd5+8960];	// id:107 data1+0x0
+	mul.f32 	%f20, %f18, %f19;    	// 
+	st.shared.f32 	[%rd5+768], %f20;	// id:108 data1+0x0
+	.loc	1	18	0
+	ld.shared.f32 	%f21, [%rd5+4992];	// id:109 data1+0x0
+	ld.shared.f32 	%f22, [%rd5+9088];	// id:110 data1+0x0
+	mul.f32 	%f23, %f21, %f22;    	// 
+	st.shared.f32 	[%rd5+896], %f23;	// id:111 data1+0x0
+	add.s32 	%r14, %r14, 1;       	// 
+	add.u64 	%rd5, %rd5, 4;       	// 
+	setp.ne.s32 	%p2, %r14, %r4;  	// 
+	@%p2 bra 	$Lt_0_14;           	// 
+ //<loop> Part of loop body line 9, head labeled $Lt_0_11
+	add.s32 	%r3, %r3, 8;         	// 
+	add.u64 	%rd4, %rd4, 1024;    	// 
+	setp.lt.s32 	%p3, %r3, %r4;   	// 
+	@%p3 bra 	$Lt_0_11;           	// 
+$Lt_0_9:
+	.loc	1	21	0
+	exit;                         	// 
+$LDWend_doit:
+	} // doit
+

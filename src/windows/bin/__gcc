@@ -1,0 +1,233 @@
+#!/bin/bash
+source $(dirname $0)/__common
+
+__CL="$__DIR/bin/cl.exe"
+__LINK="$__DIR/bin/link.exe"
+__BSCMAKE="$__DIR/bin/bscmake.exe"
+
+__check_exec "$__CL" "$__LINK" "$__BSCMAKE"
+
+__OUT=""
+__CL_ARGS="/D__MINGW32__ /DWIN32 /D__STDC__ /D__STDC_VERSION__=199409L /D__func__=__FUNCTION__ /Dinline=__inline"
+__CL_ARGS="$__CL_ARGS /D__inline__=__inline /D__alignof__=__alignof /D_CRT_SECURE_NO_WARNINGS /MTd /bigobj"
+__LINK_ARGS="/INCREMENTAL:NO /MANIFEST:NO"
+__NO_OUT="Yes"
+__NO_LINK="Yes"
+__NO_CL="Yes"
+__PREPROCESS_ONLY=""
+__BROWSE_FILES=""
+__CREATE_D=""
+__CL_VERSION="/nologo"
+__LINK_VERSION="/nologo"
+__BSCMAKE_VERSION="/nologo"
+__CL_DEBUG="/DNDEBUG"
+__LINK_DEBUG=""
+
+INCLUDE="$__THIS_DIR/include;$__DIR/include;$__DIR/PlatformSDK/Include;$__DIR"
+LIB="$__THIS_DIR/lib;$__DIR/lib"
+
+export INCLUDE LIB
+
+while [[ $# -ge 1 ]]; do
+  __ARG="$1"
+  # preserve double quotes
+  __ARG="${__ARG//\"/\\\"}"
+  # echo __ARG="$__ARG"
+  shift
+  case $__ARG in
+    -Wformat | -Wno-format | -std=* | -mno-cygwin | -mno-sse* | -m32 | -fno-strict-aliasing )
+      # skip
+      ;;
+    -MMD )
+      __CREATE_D="Yes"
+      ;;
+    -Werror )
+      __CL_ARGS="$__CL_ARGS /WX /wd4068 /wd4005 /wd4274 /wd4142 /wd4114 /wd4716 /wd4144 /wd4553"
+      __CL_ARGS="$__CL_ARGS /wd4715 /wd4113 /wd4530 /wd4700 /wd4145 /wd4090 /wd4293 /wd4355 /wd4305"
+      __CL_ARGS="$__CL_ARGS /wd4805 /wd4190"
+      ;;
+    -O0 )
+      __CL_ARGS="$__CL_ARGS /Od"
+      ;;
+    -c )
+      __CL_ARGS="$__CL_ARGS /c"
+      __NO_LINK="Yes"
+      __NO_CL=""
+      ;;  
+    -H )
+      __CL_ARGS="$__CL_ARGS /showIncludes"
+      ;;
+    --help | --target-help )
+      __CL_ARGS="$__CL_ARGS /HELP"
+      ;;
+    -E )
+      if [[ "$1" == "-P" ]]; then
+        __CL_ARGS="$__CL_ARGS /EP"
+        shift
+      else
+        __CL_ARGS="$__CL_ARGS /E"
+      fi
+      __NO_LINK="Yes"
+      __NO_OUT="Yes"
+      __NO_CL=""
+      __PREPROCESS_ONLY="Yes"
+      ;;  
+    -o )
+      __OUT=$1
+      __NO_OUT=""
+      shift
+      ;;
+    -funsigned-char )
+      __CL_ARGS="$__CL_ARGS /J"
+      ;;
+    -fno-exceptions )
+      __CL_ARGS="$__CL_ARGS /EHs-c-"
+      ;;
+    -msse* )
+      __CL_ARGS="$__CL_ARGS /arch:${__ARG:2}"
+      ;;
+    -g )
+      __CL_DEBUG="/D_DEBUG /Zi /FR"
+      __LINK_DEBUG="/DEBUG"
+      ;;
+    -xc )
+      __CL_ARGS="$__CL_ARGS /TC"
+      ;;
+    -xc++ )
+      __CL_ARGS="$__CL_ARGS /TP"
+      ;;
+    -x )
+      case $1 in
+        c )
+          __CL_ARGS="$__CL_ARGS /TC"
+          ;;
+        c++ )
+          __CL_ARGS="$__CL_ARGS /TP"
+          ;;
+        * )
+          # This will almost certainly explode
+          __CL_ARGS="$__CL_ARGS $__ARG"
+          ;;          
+      esac
+      shift  
+      ;;
+    -L* )
+      __ARG=${__ARG:2}
+      __LINK_ARGS="$__LINK_ARGS /LIBPATH:$__ARG"
+      ;;
+    -lm )
+      # MSVC has its own system libraries
+      ;;
+    -Wl,--version | -Wl,-v | -Wl,-V )
+      __LINK_VERSION=""
+      ;;
+    -Wl,--help | -Wl,--target-help )
+     __LINK_ARGS="$__LINK_ARGS /?"
+      ;;
+    -Wl,--export-dynamic )
+      ;;      
+    -l* )
+      __ARG=${__ARG:2}
+      __LINK_ARGS="$__LINK_ARGS lib$__ARG.a"
+      __NO_LINK="" 
+      ;;
+    *.a )
+      __LINK_ARGS="$__LINK_ARGS $__ARG"
+      if [[ -f ${__ARG%.*}.bsc.listing ]]; then
+        __BROWSE_FILES="$__BROWSE_FILES $(<${__ARG%.*}.bsc.listing)"
+      fi  
+      __NO_LINK="" 
+      ;;
+    *.o )
+      __LINK_ARGS="$__LINK_ARGS $__ARG"
+      __BASEARG=$(basename $__ARG)
+      __BASEARG=${__BASEARG%.*}
+      if [[ ! "$__OUT" ]]; then
+        __OUT=$__BASEARG
+      fi 
+      if [[ -f ${__ARG%.*}.sbr ]]; then
+        __BROWSE_FILES="$__BROWSE_FILES ${__ARG%.*}.sbr" 
+      fi
+      __NO_LINK="" 
+      ;;    
+    *.cpp | *.cc | *.cxx | *.c )
+      __CL_ARGS="$__CL_ARGS $__ARG"
+      __BASEARG=$(basename $__ARG)
+      __BASEARG=${__BASEARG%.*}
+      if [[ ! "$__OUT" ]]; then
+        __OUT=$__BASEARG
+      fi
+      __BROWSE_FILES="$__BROWSE_FILES ${__BASEARG}.sbr" 
+      __NO_CL="" 
+      ;;    
+    -Wl,* ) 
+      # pass it thru by default 
+      __LINK_ARGS="$__LINK_ARGS ${__ARG:4}"
+      ;;
+    --version | -version | -V )
+      __CL_VERSION=""
+      ;;
+    -v )
+      VERBOSE=1
+      ;;  
+    * ) 
+      # pass it thru by default 
+      __CL_ARGS="$__CL_ARGS $__ARG"
+      ;;
+  esac
+done
+
+if [[ "$VERBOSE" ]]; then
+  __CL_VERSION=""
+  __LINK_VERSION=""
+  __BSCMAKE_VERSION=""
+fi
+
+# determine output file name if not explicitly specified
+if [[ "$__OUT" ]]; then
+  if [[ "$__NO_OUT" && "$__NO_LINK" ]]; then
+    __OUT="$__OUT.o"
+  elif [[ ! "$__NO_LINK" ]]; then
+    __OUT="$__OUT.exe"
+  fi
+  __NO_OUT=""
+fi
+
+# decide whether to run cl.exe or link.exe
+if [[ ! "$__NO_CL" ]]; then
+  __CMD="$__CL $__CL_VERSION $__CL_DEBUG"
+  if [[ ! "$__NO_OUT" && ! "$__PREPROCESS_ONLY" ]]; then
+    __CMD="$__CMD /Fo$__OUT"
+  fi
+  __CMD="$__CMD $__CL_ARGS"
+  if [[ ! "$__NO_LINK" ]]; then
+    __CMD="$__CMD /link $__LINK_VERSION $__LINK_DEBUG $__LINK_ARGS"
+    [[ "$VERBOSE" ]] && __CMD="$__CMD /VERBOSE"
+  elif [[ ! "$__NO_OUT" && "$__PREPROCESS_ONLY" ]]; then
+    __CMD="$__CMD >$__OUT"
+  fi 
+else
+  __CMD="$__LINK $__LINK_VERSION $__LINK_DEBUG"  
+  if [[ ! "$__NO_OUT" ]]; then
+    __CMD="$__CMD /OUT:$__OUT"
+  fi
+  __CMD="$__CMD $__LINK_ARGS"
+  [[ "$VERBOSE" ]] && __CMD="$__CMD /VERBOSE"
+fi  
+
+# run command
+__invoke_cmd "$__CMD"
+__RET=$?
+
+# Create dependency files
+if [[ $__RET -eq 0 && ! "$__NO_CL" && "$__CREATE_D" ]]; then
+  __invoke_cmd "touch ${__OUT%.*}.d"
+  __RET=$?
+fi
+
+# If linking was performed and was successful, build browse info
+if [[ $__RET -eq 0 && "$__BROWSE_FILES" && ! "$__NO_LINK" ]]; then
+  __build_browse_info
+fi 
+
+exit $__RET 

@@ -1,0 +1,107 @@
+/* -*- C++ -*- Replacement file for Visual Studio. */
+#ifndef __MINGW32_MSVC_EXT_HASH_MAP
+#define __MINGW32_MSVC_EXT_HASH_MAP
+
+#include "include/hash_set"
+#include "include/hash_map"
+
+namespace __gnu_cxx {
+
+  template <class K>
+  struct equal_to: public std::equal_to<K> {
+  };
+
+  template <class K>
+  struct hash {
+    size_t operator()(const K &k) const { return (size_t)k; }
+  };
+
+  template <class K>
+  struct hash<K *> {
+    size_t operator()(const K *k) const {
+      size_t h = 0;
+      for(; *k; ++k) {
+        h = 5 * h + *k;
+      }  
+      return h;
+    }
+  };
+
+  template <class K, class H, class C>
+  class __msvc_hash_map_compare: public stdext::hash_compare<K> {
+    H h;
+    C c;
+   public:
+    __msvc_hash_map_compare(void) { }
+    __msvc_hash_map_compare(const H &hf, const C &cf): h(hf), c(cf) { }
+    size_t operator()(const K &k) const { return h(k); }
+    bool operator()(const K &k1, const K &k2) const {
+      /* We need to implement the '<' relation.  First, sort nodes according to the hash value.  
+         Nodes with differing hash values are clearly either '<' or '>'.  */
+      size_t h1 = h(k1), h2 = h(k2);
+      if(h1 != h2) {
+        return h1 < h2;
+      }
+      /* Nodes with the same hash values may or may not be equal; if they are, then clearly
+         they are not '<'.  */  
+      if(c(k1, k2)) {
+        return false;  
+      }  
+      /* We use a memcmp to establish a linear ordering among distinct nodesthe keys.  This may fail if the key
+         has a non-trivial copy constructor.  */ 
+      const unsigned char
+          *k1b = (const unsigned char *)&k1,
+          *k1e = (const unsigned char *)(&k1 + 1),
+          *k2b = (const unsigned char *)&k2;
+      while(k1b < k1e && *k1b == *k2b) {
+        ++k1b, ++k2b;
+      }  
+      return k1b < k1e && *k1b < *k2b;
+    } 
+  };
+
+  template <class K, class T, class H = hash<K>, class C = std::equal_to<K>,
+            class A = std::allocator<T> >
+  class hash_map: public stdext::hash_map<K, T, __msvc_hash_map_compare<K, H, C>, A> {
+   public:
+    typedef H hasher;
+    typedef C key_equal;
+    hash_map(size_t n = 100) { }
+    hash_map(size_t n, const H &hf, const C &cf, const A &af):
+        stdext::hash_map<K, T, key_compare, A>(key_compare(hf, cf), af) { } 
+  };
+  
+  template <class T, class H, class E, class C>
+  class __msvc_hashtable_compare: public stdext::hash_compare<T> {
+    H h;
+    C c;
+    E e;
+   public:
+    __msvc_hashtable_compare(const H &hf, const C &cf, const E &ef): h(hf), c(cf), e(ef) { }
+    size_t operator()(const T &t) const { return h(e(t)); }
+    bool operator()(const T &t1, const T &t2) const {
+      return (&t1 < &t2) && !c(e(t1), e(t2));
+    }
+  };
+
+  template <class T, class K, class H, class E, class C,
+            class A = std::allocator<T> >
+  class hashtable: public stdext::hash_set<T, __msvc_hashtable_compare<T, H, E, C>, A> {
+   public:
+    hashtable(size_t n, const H &hf, const C &cf, const E &ef):
+        stdext::hash_set<T, key_compare, A>(key_compare(hf, cf, ef)) { }
+    T &find_or_insert(const T &t) {
+      std::pair<iterator, bool> i;
+      i.first = find(t);
+      if(i.first == end()) {
+        i = insert(t);
+      }  
+      return *i.first;
+    }
+    std::pair<iterator, bool> insert_unique(const T &t) {
+      return insert(t);
+    }  
+  };                                          
+
+}
+#endif // #ifndef __MINGW32_MSVC_EXT_HASH_MAP

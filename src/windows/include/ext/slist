@@ -1,0 +1,16 @@
+/* -*- C++ -*- Replacement file for Visual Studio. */
+#ifndef __MINGW32_MSVC_EXT_SLIST
+#define __MINGW32_MSVC_EXT_SLIST
+
+#include "include/list"
+
+namespace __gnu_cxx {
+
+  template <class T, class A = std::allocator<T> >
+  class slist: public std::list<T, A> {
+   public:
+     slist(void) { }
+     slist(const A &a): std::list<T, A>(a) { }
+  };
+}
+#endif // #ifndef __MINGW32_MSVC_EXT_SLIST

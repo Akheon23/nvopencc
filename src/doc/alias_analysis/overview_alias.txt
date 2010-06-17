@@ -1,0 +1,271 @@
+
+History of Changes to this document:
+
+   - Created on Feb. 4, 2009 by Xiangyun Kong
+
+
+----------------------------------------------------------------------------------------------------------
+
+                           Overview of Alias Analysis in Open64 
+
+                                 Xiangyun Kong
+
+                                  Feb. 3, 2009
+
+
+
+1. Introduction
+
+   Alias analysis is one of the most critical components in an optimizer.
+   In order to improve the alias analysis in Open64, we have to understand
+   the current implementation, and its limitations. 
+
+   This note serves as a brief overview of alias analysis in Open64.
+
+2. Overview of Alias Analysis in Open64
+
+   2.1. Memory Accesses in WHIRL 
+
+     The symbol table (ST) provides memory directly accessed in a program unit.
+
+     The following operations in WHIRL provide direct accesses to memorys,
+
+         LDID st_idx, offset, TYPE
+         STID st_idx, offset, TYPE
+         LDBITS st_idx, offset, TYPE, bit_offset, bit_size
+         STBITS st_idx, offset, TYPE, bit_offset, bit_size
+
+     The following operations in WHIRL provide indirect accesses to memorys,
+
+         ILOAD  memory_address
+         ISTORE memory_address
+         MLOAD  memory_address
+         MSTORE memory_address
+         MLOADX memory_address
+         MSTOREX memory_address
+         
+   2.2. Memory Accesses in Optimizer - OPT_STAB and VER_STAB
+
+     - During alias analysis, a new symbol table, the OPT_STAB,  
+       is created for better representing alias information. The aux_id is
+       used in memory operations for representing memory address.
+
+       A memory address with same st_idx, offset, and field-id is represened by 
+       the same AUX_STAB_ENTRY.
+
+         LDID aux_idx, TYPE
+         STID aux_idx, TYPE
+         LDIDBITS aux_idx, TYPE, bit_offset, bit_size
+         STIDBITS aux_idx, TYPE, bit_offset, bit_size
+
+     - After SSA is constructed, a versioned symbol table, VER_STAB, 
+       is created, for enforcing single assignment rule. The ver_idx is used
+       in memory operations for representing memory address,
+
+       MU_NODE (implicit use) and CHI_NODE (implicit def)
+       are used to represent implicit memory accesses.
+
+         LDID ver_idx, TYPE
+         STID ver_idx, TYPE
+         LDIDBITS ver_idx, TYPE, bit_offset, bit_size
+         STIDBITS ver_idx, TYPE, bit_offset, bit_size
+
+         ILOAD  memory_address : mu (ver_id)
+         ISTORE memory_address : ver_id2 = chi_node (ver_id1), ver_id4 = chi_node(ver_id3),...
+
+
+   2.3. Collection of Alias Information - POINTS_TO
+
+     During alias analysis, the basic alias information for a memory access is
+     collected into a POINTS_TO class. Each direct memory operation has an 
+     associated POINTS_TO class attached to its correcponding AUX_TABLE_ENTRY,
+     and each indirect memory opertion has an associated POINTS_TO class
+     attached to its corresponding OCC_TABLE_ENTRY.
+
+   2.4. Alias Rules
+
+     After memory access information is collected, 
+     the alias analysis needs to apply certain rules to determine if two
+     memory accesses are aliased each other. 
+
+     The detailed alias rules used in Open64 is described in be/com/opt_alias_rule.h.
+     
+     The alias rules can be classified into,
+
+      - rules by declaration
+
+       These rules are mainly based on language features, which can be derived from source level
+       information. For example,  based on C99's specification, 
+
+          Two different restrict pointers in the same scopes are not aliased each other.
+
+       So, if two memory operations' base addresses use different restrict pointers in the same scopes,
+       they could be considered as not aliased each other.
+
+       Some WOPT flags may determine which declaration rules to apply. For example, 
+
+              -WOPT:alias=strongly_typed
+
+       may enable strong typed based alias rule. The detailed alias related flags can be
+       found in the following routine (defined in common/com/config.cxx),
+
+              void Configure_Alias_Options(OPTIONS_LIST *olist);
+
+      - rules by analysis
+
+       These rules are based on some analysis. For example, 
+ 
+           Two memeory operations with different alias classes are considered not aliased each other.
+           
+       Memory address, offset, field IDs, and type size are some of the factors used 
+       in the rules by analysis.
+
+       Typically, both rules by declaration and rules by analysis are applied.  The alias analysis
+       will apply all enabled rules one by one before it determines two memory accesses are 
+       not aliased.
+              
+
+   2.5. Alias Analysis Algorithm
+
+     The alias analysis in Open64 is not a stand alone phase, it mixes with various phases,
+     including SSA building and some optimizations and simplifications. 
+
+     In summary, the INPUT to the alias analysis is a program unit represented by a 
+     WHIRL tree, and its associated symbol table, type table, and other WHIRL tables.
+
+     The OUTPUT of the alias analysis is a SSA based intermediate representation, which
+     has alias information encoded into the intermediate representation.
+
+     The detailed steps are summaried as follows,
+     
+     Step 1. Create AUX_TABLE - Build Direct Memory Access Information
+        
+        In this step, a new symbol table for optimization (OPT_STAB) is created, 
+        and all DIRECT memory accesses are converted to use the new symbols.
+    
+        For each symbol in the Optimizer symbol table, there is an associated 
+        POINTS_TO class to hold the attributes of the symbol.
+
+        At the end of this step, ST_IDX (index to WHIRL symbol table)
+        in WNs is repalced by AUX_ID (index to the optimizer symbol table).
+
+
+     Step 2. Alias Classification - Compute alias class for each memory operation
+
+        This step uses the algorithm from the following paper,
+
+           Steensgaard, B.  "Points-to analysis in almost linear time."
+            Proceedings of 23rd Annual ACM SIGACT-SIGPLAN Symposium."
+
+        At the end of this step, each memory operation WN node is assigned a class number. 
+        The class information will be used in later stage to determine if two memory 
+        accesses are aliased, i.e., if two memory operate WN have different class number, 
+        they are considered not aliased.
+
+        Two special class numbers (0 and 1) used to represent either the memory operation
+        is not analyzed, or a conservative class number is assigned due to memory limitation 
+        (there is a limitation on maximum number of classes).
+
+        More details can be found in be/opt/opt_alias_Class.h
+
+     Step 3. Flow Free Alias Analysis - Build Indirect Memory Access Information
+
+        In this step, 
+
+        - An OCC_STAB_ENTRY and a virtual variable (AUX_STAB_ENTRY) are created for 
+          each indirect memory access.
+
+          The virtual variables are created based on the base address of the
+          memory access. Indirect memory access with same base address will 
+          share the same virtual variable.
+
+        - An OCC_STAB_ENTRY is created for each black-box WN (IO, ICALL, etc).
+
+        - An OCC_STAB_ENTRY is created for each scalar STORE with aliases, and the
+          OCC_STAB_ENTRY's points_to is initialized with AUX_STAB_ENTRY's points_to.
+
+        - Alias classes computed in Step 2 are transfered into OCC_STAB_ENTRY->points_to.
+
+        - For each scalar STORE with aliases,
+
+           Add CHI_NODE for each aliased AUX_STAB_ENTRY (based on ALIASES RULES), and 
+           the CHI_NODE is attached to the corresponding OCC_STAB_ENTRY.
+
+        - For each indrect LOAD, add a MU_NODE for the virtual variable and the MU_NODE
+          is attached to the corresponding OCC_STAB_ENTRY.
+        
+        - For each indirect STORE,
+
+          Add CHI_NODEs for the virtual variable, and variables aliased with the virtual
+          variables (based on Alias Rules), and CHI_NODEs are attched to the OCC_STAB_ENTRY.
+
+        More details are in be/opt/opt_alias_analysis.cxx          
+
+     Step 4. Construct SSA
+
+        During constructing SSA, PHI_NODE and VER_STAB are created for enforcing single
+        assignment form. The ver_idx is used to represent memory operations.
+
+        At the end of this step, implicit use-def information is built, i.e., for each
+        VER_STAB_ENTRY, a definition WN can be found.
+
+     Step 5. Flow-sensitive Alias Analysis - Refine Indirect Memory Accesses
+
+        During this step, a memory base address is re-computed with the def-use information
+        computed in Step 4, and POINTS_TO is refined based on the new base address.        
+
+        When a memory base address is changed, an indirect memory access's corresponding virtual
+        variable might be changed, so are the MU_NODE and CHI_NODE associated with the 
+        virtual variable.
+
+     In summary, at the end of step 5, alias information is encodeed into the IR as follows,
+
+       - Memory access is represented by ver_idx, which is an index to the VER_STAB, a versioned 
+         optimizer symbol table.
+
+       - A directy memory access's ver_idx is encoded into the WHIRL node (replacing the st_idx).
+
+       - An OCC_STAB_ENTRY is created for representing indirect memory access, and 
+         MU_NODE and CHI_NODE are created for representing the aliased memory accesses and
+         are attched to the corresponding OCC_STAB_ENTRY.
+
+    2.6. Review
+
+      - As mentioned before, the alias analysis in Open64 is not a stand-alone phase,
+        so re-apply the alias analysis may not get the same alias information.
+
+      - Alias analysis result is not saved between calls to Pre_optimizer, 
+        This can lead to both inefficiency in terms of compiling time, and
+        inaccuracy in terms of alias analysis result, i.e., a restrict pointer 
+        attribute might be lost during optimizations, and when the alias analysis
+        is re-applied, the alias information may become less accurate.
+
+      - The alias information for LOAD and STORE of the same memory address
+        are encoded differntly in the IR, as an example,
+
+
+                 *(x) = ...
+                   ... = *(x) 
+                   ...
+                   ... = *(y)
+                   
+        
+        Let aux_vx represent memory access by *(x), and aux_vy represent memory 
+        access by *(y), and assume *(x) is aliased with *(y),
+        the alias information for the above code look like,
+
+               *(x) = ...
+               aux_vx = chi(aux_vx), aux_vy = chi(aux_vy)
+
+               ... = *(x)   
+                     mu(aux_vx) 
+
+               ... = *(y)
+                     mu(aux_vy)
+
+ 
+      - The scopes of restrict attribute are not handled, so there are potentiial problems 
+        with the current implementation in dealing with restricted pointers, i.e., the 
+        current alias rules applied to restricted pointers may be too aggressive.
+         
+   

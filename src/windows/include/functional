@@ -1,0 +1,22 @@
+/* -*- C++ -*- Replacement file for Visual Studio. */
+#ifndef __MINGW32_MSVC_FUNCTIONAL
+#define __MINGW32_MSVC_FUNCTIONAL
+
+#include "include/functional"
+
+namespace std {
+
+template <class P>
+struct _Select1st : public unary_function<P, typename P::first_type> {
+  typename P::first_type &operator()(P& p) const { return p.first; }
+  const typename P::first_type &operator()(const P& p) const { return p.first; }
+};
+
+template <class P>
+struct _Select2nd : public unary_function<P, typename P::second_type> {
+  typename P::second_type &operator()(P& p) const { return p.second; }
+  const typename P::second_type &operator()(const P& p) const { return p.second; }
+};
+
+}
+#endif // #ifndef __MINGW32_MSVC_FUNCTIONAL

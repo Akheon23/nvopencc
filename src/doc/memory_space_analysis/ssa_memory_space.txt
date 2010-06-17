@@ -1,0 +1,247 @@
+
+                    Memory Space Analysis on SSA-based IR, and
+                           Its Use in LDU Marking
+
+                               Xiangyun Kong
+                                 3/24/2009
+                              
+
+1. Introduction
+
+   In a CUDA program, the memory spaces are classified into the following,
+
+       - Local, accessed by a single thread only
+
+       - shared, accessed within a thread block only
+
+       - global, accessed by all threads  
+       
+       - param pointer, the memory pointed to by a param pointer is considered global
+
+       - const, accessed by all threads, in a read-only mode
+
+   In the early CUDA architecture, memory space access cannot be mixed, i.e., a
+   memory access has to specify which memory space to access.
+
+   Memory space analysis is to find out which memory space a pointer points to.
+
+   Memory space information is required for the following reasons,
+
+   - Memory space information is required for early CUDA architecture since 
+     different memory space dereference require different instructions.
+
+   - Memory space information is required for some new instructions in GF100
+     for avoiding severe performance penalty. 
+
+     For the GF100 architecture, using LDU to access a global memory may be 
+     beneficial, but use LDU to access shared memory can cause severe performance penalty. 
+
+   - Memory space information can be used to help improve alias analysis.
+
+     Memory at different memory space should not overlap, so if two memory reference
+     access different memory space, they should not be aliased.
+             
+
+2. General Algorithm of Memory Space Analysis
+
+   The general algorithm for memory space analysis can be summarized as follows,
+
+     - Collect a work list by looking at the memory space information of each memory declared and 
+       used (through address taken) in the program
+
+     - Follow the data-flow of the elements in the work-list and keep updating the
+       work-list until no more changes.
+
+   So, the basic information needed are the initial memory space information encoded in the
+   symbol table, and the data-flow information which can be used to propagate the information.
+        
+
+3. Where the analysis should be performed
+
+   The memory space analysis could be done on either WHIRL or SSA-based IR.
+
+   The memory space analysis implemented on WHIRL has an advantage of doing early to help
+   downstream alias analysis, but since the data-flow information is not available, the analysis
+   either requiring extra effort of data-flow analysis, or less accurate analysis.
+
+   The advantage of implementing the analysis on SSA-based IR is that the data-flow information
+   is encoded in the IR. The disadvantage is that the analysis is a little too late for
+   alias analysis, since alias analysis is part of the SSA building.
+
+   On the other hand, since the Pre_Optimizer is invoked multiple time in our implementation, 
+   the memory space analysis done on SSA-based IR in the first time could be used to refine the 
+   alias analysis when SSA-building is invoked the second time, but it will require the information
+   to be saved in between.
+ 
+4. Memory Space Analysis Algorithm on SSA-based IR
+
+   4.1. Memory information represented in SSA-based IR
+
+      The memory information are represented in SSA-based IR by the following CODEREPs,
+
+      - CK_VAR - with a pointer points to original symbol
+
+        The offset and field ID is part of the CK_VAR, so the field information can be 
+        inferred from the information encoded in the CK_VAR
+
+      - CK_LDA - taking address of an original symbol
+
+        The CK_LDA itself represents the address of the symbol.
+
+
+   4.2. Data-flow information represented in SSA-based IR
+
+      Data-flow information is represented in SSA-based IR as follows,
+
+      - CK_VAR represents the direct data-flow among its appearances in 
+        definition sites and use sites.
+
+      - All CODEREPs may have a implicit data-flow relation between an operand and 
+        its expression parent.
+
+      Since memory space analysis only needs to following the memory address computation,
+      some implicit data-flow information should be ignored,
+
+      - A store's left operand on its implicit def (CHI_LIST) 
+
+      - ILOAD's base address on ILOAD
+
+  4.3. Data Structures for Representing Memory Space Information
+    
+      The following type is use to represent the memory space information for a variable
+      or expression,
+
+       typedef enum {
+         MEMORY_KIND_INIT    = 0,     // unchecked
+         MEMORY_KIND_LOCAL   = 1,     // cuda device
+         MEMORY_KIND_GLOBAL  = 2,     // cuda global
+         MEMORY_KIND_CONST   = 4,     // cuda constant
+         MEMORY_KIND_SHARED  = 8,     // cuda shared
+         MEMORY_KIND_PARAM   = 16,    // pointer to formal parameter
+         MEMORY_KIND_GLB_CONST = 32,  // global converted from constant 
+         MEMORY_KIND_UNKNOWN = 63     // unknown memory kind
+       } MEMORY_KIND;
+
+
+       struct cr_mem_info {
+         MEMORY_KIND mem_kind : 6;  // Keep MEMORY kind information  
+                                    // for each CODEREP
+         BOOL is_pointer:1;         // keep tracking if a CODEREP has pointer type
+       } *_CR_mem_info;
+
+      The MEMORY_KIND is declared so that 6-bits are used to represent 6 different 
+      kinds of memory space. The MEMORY_KIND_GLB_CONST is used to identify the
+      global converted from CUDA constant (under -WOPT:Enable_Const2global).
+
+      The is_pointer bit is used to track and propagate if a variable or expression has
+      pointer type, and only memory space information
+      of pointer types variables or expressions are propagated to their parent expression.
+      
+ 
+  4.4. Algorithm
+
+      Step 1. Initialize all CODEREP's memory kind to MEMORY_KIND_INIT, and is_pointer to FALSE.
+
+      Step 2. Collect initial work list by traverse the program and check the following CODEREP,
+              and STMTREP,
+
+         1) for CK_LDA symbol, 
+
+            - use the symbol's memory kind as the memory kind for LDA symbol, and
+
+            - set the is_pointer to TRUE
+
+            - push it to work-list
+
+         2) go through all CODEREP in the entry CHI_LIST (from OPR_OPT_CHI STMTREP)
+
+            - if the CODEREP does not have an original symbol, ignore
+
+            - set the memory kind of the CODEREP based on the original symbol's memory kind, and
+
+            - set the is_pointer based on if the corresponding symbol + offset is has pointer type
+
+            - Push it to work-list if is_pointer is TRUE
+
+      Step 3. While work-list is not EMPTY
+
+            - POP a CR from the work-list
+
+            - Following the forward data-flow edges of CR, and 
+
+                propagate memory kind and is_pointer to its use-site or parent-expression site, and 
+
+                if the memory-kind of use or parent-expression is changed, 
+                    push the use or parent-expression to work-list.
+
+
+
+  4.5. Modified CODEREP_AFFECT_MAP
+
+    The CODEREP_AFFECT_MAP is for representing forward data-flow edges.
+
+    As mentioned in 4.2, since Memory space analysis needs to ignore certain implicit data-flow edges,
+    the CODEREP_AFFECT_MAP is modified slightly to provide an interface allowing 
+    some implicit data-flow edges  be ignored.
+
+  4.6. Diagnosis of Accesses to Conflicting Memory Spaces
+
+    Based on the result, if a memory dereference could access two or more different memory spaces, 
+    a conflict memory space violation can be reported for the previous CUDA architecture.
+
+    The reporting is controlled under a flag.
+
+  4.7. Implemented Interfaces
+
+     class CR_MemoryMap : CODEREP_DEF_USE_WALK
+     {
+     public:
+        CR_MemoryMap (CODEMAP *codemap);
+
+       ~CR_MemoryMap(void);
+
+       // interfaces for retrieving the memory kind of a given CODEREP
+       inline MEMORY_KIND CR_get_memory_kind (CODEREP *cr) const;
+
+       // interfaces for retrieving the memory kind of a given CODEREP
+       inline MEMORY_KIND CR_get_memory_kind (INT32 cr_id) const;
+
+       // The interface for setup memory kind of CODEREPs in the program unit
+       //
+       void Setup_coderep_memory_kind (CODEREP_AFFECT_MAP *map);
+      };
+     
+
+5. Use of Memory Space Information in LDU Marking
+
+   The LDU marking is to look for ILODA candidates which likely benefit from LDU.
+   With memory space information, the algorithm for LDU mark can be summarized as below,
+
+   - Perform thread variance analysis
+
+   - Perform memory space analysis
+
+   - For each ILOAD, 
+
+     if it is thread-invariant
+
+        if its memory space is unchecked, or unknown, shared, local
+
+           ignore the ILOAD
+
+        else if its memory space is CONST or GLOBAL-CONST
+    
+           Mark it as LDU candidate
+
+        else if the ILOAD is marked as CONST (read-only access)
+
+           Mark it as LDU candidate
+
+        else if the ILOAD can only be reached from ENTRY
+
+           Mark it as LDU candidate
+
+        endif
+
+      endif
+          

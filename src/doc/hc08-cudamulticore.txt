@@ -1,0 +1,43 @@
+			CUDA on Multicore CPUs
+
+			     Vinod Grover
+			    Baastian Aarts
+			     Mike Murphy
+			       Ian Buck
+
+			  NVIDIA Corporation
+			Santa Clara, CA 95050
+
+
+
+CUDA is a general purpose scalable parallel programming model for
+writing highly parallel applications.  It provides several key
+abstractions--a hierarchy of thread blocks, shared memory, and barrier
+synchronization.  This model has proven quite successful at
+programming multithreaded manycore GPUs and scales transparently to
+hundreds of cores.
+
+In this paper we demonstrate how CUDA is an effective parallel
+programming model for multicore CPUs as well as GPUs.  We describe an
+implementation of the CUDA toolchain for commodity multicore CPUs on
+several popular operating systems (Microsoft Windows, Linux, and Apple
+MacOS).  It can compile any CUDA application without modifications to
+run on multicore processors with near-linear scaling and minimal
+runtime overhead.  CUDA enables application developers to deploy a
+single source code on different parallel platforms: multicore CPUs and
+manycore GPUs.
+
+The toolchain consists of two main components: a parallelizing
+compiler and a multithreaded runtime.  The multicore runtime maps CUDA
+thread blocks to separate cores using the host operating system
+threads.  The compiler performs optimizing transformations to
+vectorize operations across the fine-grained threads of a CUDA thread
+block into a single CPU thread.
+
+We evaluated this system on several CUDA applications and found that
+the single processor overhead ranged between 5-10%, and that the
+programs scaled linearly up to 4 processors.  The presentation will
+provide detailed overviews of the runtime and the compiler.  It will
+show performance and scalability numbers for several applications on
+multicore CPUs and compare them with CUDA on GPUs as well as native
+multithreaded C++ code written for CPUs.

@@ -1,0 +1,80 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia32_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling 312172c.i (/tmp/ccBI#.dYWztV)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:32
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"312172c.i"
+
+
+	.entry tgamma_main
+	{
+	.reg .u32 %r<3>;
+	.reg .f32 %f<13>;
+	.reg .pred %p<5>;
+	.param .f32 __cudaparm_tgamma_main_x;
+	.param .u32 __cudaparm_tgamma_main_res;
+	.loc	1	4	0
+$LBB1_tgamma_main:
+	ld.param.f32 	%f1, [__cudaparm_tgamma_main_x];	// id:33 __cudaparm_tgamma_main_x+0x0
+	mov.f32 	%f2, 0f00000000;     	// 0
+	setp.ge.f32 	%p1, %f1, %f2;   	// 
+	@!%p1 bra 	$Lt_0_72;          	// 
+	.loc	1	10	0
+	rcp.f32 	%f3, %f1;            	// 
+	mov.f32 	%f4, 0f42081eb8;     	// 34.03
+	setp.gt.f32 	%p2, %f1, %f4;   	// 
+	@!%p2 bra 	$Lt_0_73;          	// 
+	.loc	1	12	0
+	mov.f32 	%f5, 0fbf800000;     	// -1
+	add.f32 	%f6, %f1, %f5;       	// 
+	div.f32 	%f3, %f3, %f6;       	// 
+$Lt_0_73:
+	.loc	1	14	0
+	mov.f32 	%f7, %f3;            	// 
+	bra.uni 	$Lt_0_71;            	// 
+$Lt_0_72:
+	.loc	1	16	0
+	mov.f32 	%f8, 0f40000000;     	// 2
+	div.f32 	%f3, %f8, %f1;       	// 
+	mov.f32 	%f9, 0fc2081eb8;     	// -34.03
+	setp.gt.f32 	%p3, %f1, %f9;   	// 
+	@!%p3 bra 	$Lt_0_75;          	// 
+	.loc	1	18	0
+	mov.f32 	%f10, 0f3f800000;    	// 1
+	add.f32 	%f11, %f1, %f10;     	// 
+	div.f32 	%f3, %f3, %f11;      	// 
+$Lt_0_75:
+	.loc	1	20	0
+	mov.f32 	%f7, %f3;            	// 
+$Lt_0_71:
+	.loc	1	23	0
+	ld.param.u32 	%r1, [__cudaparm_tgamma_main_res];	// id:34 __cudaparm_tgamma_main_res+0x0
+	st.global.f32 	[%r1+40], %f7; 	// id:35
+	.loc	1	24	0
+	exit;                         	// 
+$LDWend_tgamma_main:
+	} // tgamma_main
+

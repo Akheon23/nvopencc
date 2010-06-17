@@ -1,0 +1,67 @@
+	.version 1.1
+	.target compute_10, map_f64_to_f32
+	// compiled with /home/mmurphy/sw/compiler/gpgpu/open64/src/targia32_nvisa/lib//be
+	// nvopencc built on 2008-02-15
+
+	.reg .u32 %ra<17>;
+	.reg .u64 %rda<17>;
+	.reg .f32 %fa<17>;
+	.reg .f64 %fda<17>;
+	.reg .u32 %rv<5>;
+	.reg .u64 %rdv<5>;
+	.reg .f32 %fv<5>;
+	.reg .f64 %fdv<5>;
+
+
+	//-----------------------------------------------------------
+	// Compiling 312173i.i (/tmp/ccBI#.d21Cgc)
+	//-----------------------------------------------------------
+
+	//-----------------------------------------------------------
+	// Options:
+	//-----------------------------------------------------------
+	//  Target:ptx, ISA:compute_10, Endian:little, Pointer Size:32
+	//  -O3	(Optimization level)
+	//  -g0	(Debug level)
+	//  -m2	(Report advisories)
+	//-----------------------------------------------------------
+
+	.file	1	"312173i.i"
+
+
+	.entry ilogb_main
+	{
+	.reg .u32 %r<8>;
+	.reg .pred %p<4>;
+	.param .s32 __cudaparm_ilogb_main_a;
+	.param .u32 __cudaparm_ilogb_main_res;
+	.loc	1	5	0
+$LBB1_ilogb_main:
+	ld.param.s32 	%r1, [__cudaparm_ilogb_main_a];	// id:23 __cudaparm_ilogb_main_a+0x0
+	mov.s32 	%r2, 0;              	// 
+	setp.eq.s32 	%p1, %r1, %r2;   	// 
+	ld.param.u32 	%r3, [__cudaparm_ilogb_main_res];	// id:22 __cudaparm_ilogb_main_res+0x0
+	mov.s32 	%r4, %r3;            	// 
+	add.u32 	%r5, %r3, 400;       	// 
+$Lt_0_10:
+ //<loop> Loop body line 5, nesting depth: 1, iterations: 100
+	@!%p1 bra 	$Lt_0_12;          	// 
+ //<loop> Part of loop body line 5, head labeled $Lt_0_10
+	mov.s32 	%r6, -1;             	// 
+	bra.uni 	$Lt_0_11;            	// 
+$Lt_0_12:
+ //<loop> Part of loop body line 5, head labeled $Lt_0_10
+	.loc	1	17	0
+	mov.u32 	%r6, -126;           	// 
+$Lt_0_11:
+ //<loop> Part of loop body line 5, head labeled $Lt_0_10
+	.loc	1	19	0
+	st.global.s32 	[%r4+0], %r6;  	// id:24
+	add.u32 	%r4, %r4, 4;         	// 
+	setp.ne.u32 	%p2, %r4, %r5;   	// 
+	@%p2 bra 	$Lt_0_10;           	// 
+	.loc	1	21	0
+	exit;                         	// 
+$LDWend_ilogb_main:
+	} // ilogb_main
+
